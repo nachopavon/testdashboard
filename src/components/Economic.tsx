@@ -67,7 +67,7 @@ export default function Economic(){
           <div className={styles.legendItem}><span className={styles.legendBoxEst}></span> Previsión</div>
           <div className={styles.legendItem}><span className={styles.legendBoxFact}></span> Coste</div>
         </div>
-        <div className={styles.monthlyGrid}>
+  <div className={styles.monthlyGrid} ref={gridRef}>
           <div className={styles.verticalAxis}>
             {Array.from({length:4}).map((_,i)=>{
               const val = Math.round((maxMonthly/4)*(4-i))
@@ -88,7 +88,8 @@ export default function Economic(){
                     const gridRect = grid.getBoundingClientRect()
                     const targetRect = target.getBoundingClientRect()
                     const left = targetRect.left - gridRect.left + (targetRect.width/2)
-                    const top = targetRect.top - gridRect.top
+                    // place slightly above the element
+                    const top = targetRect.top - gridRect.top - 8
                     setTooltip({x: Math.round(left), y: Math.round(top), text:`Previsión ${est.toLocaleString()} € · Coste ${fact.toLocaleString()} €`})
                   } else {
                     setTooltip({x:0,y:0,text:`Previsión ${est.toLocaleString()} € · Coste ${fact.toLocaleString()} €`})

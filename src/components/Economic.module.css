@@ -33,7 +33,7 @@
 .barEst{width:18px; background:#e0e0e0; border-radius:4px}
 .barFact{width:18px; background:#2f8b58; border-radius:4px}
 .barLabel{font-size:12px; color:#666}
-.tooltip{position:absolute; background:#222; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; transform:translate(-50%,-140%); pointer-events:none}
+.tooltip{position:absolute; background:#222; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; transform:translate(-50%,-120%); pointer-events:none; z-index:20}
 .table{background:#fff; border-radius:8px; padding:12px}
 .table table{width:100%; border-collapse:collapse}
 .table th{border-bottom:1px solid #eee; text-align:left; padding:8px}
