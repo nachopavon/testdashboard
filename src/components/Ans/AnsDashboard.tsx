@@ -68,17 +68,8 @@ export default function AnsDashboard({metrics, filters}:{metrics?: MetricItem[],
     return items.map(it => ({ id: it.id, code: it.code, title: it.title, value: (it.monthly as any)[monthLabel] ?? 0, target: it.target ?? 0, unit: it.unit })) as MetricItem[]
   }
 
-  // if a specific req is selected in the header filters and sampleData has it for the month, use that
-  const externalMetrics = useMemo(()=>{
-    if(!filters?.req) return null
-    const fm = filters.month
-    if(!fm) return null
-    const m = (sampleData as any).data[fm]
-    if(!m) return null
-    const list = m[filters.req as string]
-    if(!list) return null
-    return list.map((lm:any)=>({ id: lm.id, code: lm.code, title: lm.title, value: lm.value, target: lm.target || 0, unit: lm.unit })) as MetricItem[]
-  },[filters?.req, filters?.month])
+  // Note: we no longer replace category cards with external sampleData metrics
+  // filters.month still controls which month of ansData is shown; filters.req can be used to adjust behavior later
 
   // adjust values to try to reach 90% compliance
   function adjustToGoal(items: MetricItem[], goal = 0.9){
@@ -108,7 +99,7 @@ export default function AnsDashboard({metrics, filters}:{metrics?: MetricItem[],
     return out
   }
 
-  const baseItems = externalMetrics && externalMetrics.length ? externalMetrics : buildFromAns(selectedMonth, cat)
+  const baseItems = buildFromAns(selectedMonth, cat)
   const cardItems = adjustToGoal(baseItems, 0.9)
 
   return (
