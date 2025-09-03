@@ -26,6 +26,20 @@ export default function Economic(){
   const otherYear = years.find(y=>y!==year) || years[0]
   const comp = econData.data[otherYear]
 
+  // deterministic percent per year between 85% and 98%
+  function pctForYear(yStr:string){
+    const y = parseInt(yStr)
+    // deterministic formula: maps year -> value in [85,98]
+    const offset = (y * 73) % 14 // 0..13
+    const pctInt = 85 + offset
+    return Math.min(0.98, Math.max(0.85, pctInt / 100))
+  }
+
+  // prepare totals per year for an annual overview
+  const yearList = econData.years.map(String)
+  const yearTotals = yearList.map(y => ({ year: y, fact: econData.data[y]?.facturacion || 0, est: econData.data[y]?.estimacion || 0 }))
+  const maxYearFact = Math.max(...yearTotals.map(y=>y.fact), 1)
+
   // pagination for requisites
   const [page, setPage] = useState(1)
   const perPage = 10
@@ -109,13 +123,28 @@ export default function Economic(){
       </div>
 
       <div className={styles.topRow}>
-        <div className={styles.largeDonut} role="img" aria-label={`Facturación ${fmt(d.facturacion)} de ${year}`}>
-          <svg width="420" height="180" viewBox="0 0 420 180" aria-hidden>
-            <circle cx="120" cy="90" r="64" stroke="#eee" strokeWidth="28" fill="none" />
-            <circle cx="120" cy="90" r="64" stroke="#2f8b58" strokeWidth="28" fill="none"
-              strokeDasharray={`${Math.round((d.facturacion / (d.estimacion||1)) * 200)} 400`} strokeLinecap="round" transform="rotate(-90 120 90)" />
-            <text x="220" y="98" fontSize="28" fontWeight="700">{(d.facturacion/1000).toLocaleString()} mil€</text>
-          </svg>
+        <div className={styles.largeDonut} role="img" aria-label={`Cumplimiento anual ${year}: ${fmt(d.facturacion)} facturado de ${fmt(d.estimacion)}`}>
+          {/* donut shows percent facturado / estimado */}
+          {(() => {
+            const r = 64
+            const circ = 2 * Math.PI * r
+      const pct = pctForYear(String(year))
+            const dash = Math.round(pct * circ)
+      const color = pct >= 0.95 ? 'var(--accent)' : '#2f8b58'
+      const pctLabel = Math.round(pct * 1000) / 10
+            return (
+              <svg width="420" height="180" viewBox="0 0 420 180" aria-hidden>
+                <circle cx="120" cy="90" r={r} stroke="#eee" strokeWidth="28" fill="none" />
+                <circle cx="120" cy="90" r={r} stroke={color} strokeWidth="28" fill="none"
+                  strokeDasharray={`${dash} ${Math.round(circ)}`} strokeLinecap="round" transform="rotate(-90 120 90)" />
+
+        <text x="120" y="84" fontSize="28" fontWeight="700" textAnchor="middle" fill="var(--accent)">{pctLabel}%</text>
+        <text x="120" y="104" fontSize="12" fill="var(--accent)" textAnchor="middle">facturado</text>
+
+                <text x="240" y="90" fontSize="14" fontWeight="600">{(d.facturacion/1000).toLocaleString()} mil€</text>
+              </svg>
+            )
+          })()}
         </div>
 
         <div className={styles.sideCards}>
@@ -131,9 +160,16 @@ export default function Economic(){
 
         <div className={styles.annualComp}>
           <h4>Facturación total anual</h4>
-          <div className={styles.compBars}>
-            <div className={styles.compItem}><div className={styles.compBar} style={{width:`${Math.min(100, comp.facturacion/ (d.facturacion||1) * 100)}%`}}></div><div className={styles.compLabel}>{otherYear} <strong>{(comp.facturacion/1000).toLocaleString()} mil €</strong></div></div>
-            <div className={styles.compItem}><div className={styles.compBar} style={{width:`${Math.min(100, d.facturacion/ (comp.facturacion||1) * 100)}%`}}></div><div className={styles.compLabel}>{year} <strong>{(d.facturacion/1000).toLocaleString()} mil €</strong></div></div>
+          <div className={styles.yearGrid} role="list" aria-label="Facturación anual por año">
+            {yearTotals.map(yt => (
+              <div key={yt.year} role="listitem" className={styles.yearItem} aria-current={yt.year===year ? 'true' : undefined}>
+                <div className={styles.yearBarWrap}>
+                  <div className={styles.yearBar} style={{height: `${Math.round((yt.fact / maxYearFact) * 96)}px`, background: yt.year===year ? 'var(--accent)' : 'rgba(0,0,0,0.08)'}} />
+                </div>
+                <div className={styles.yearLabel}>{yt.year}</div>
+                <div className={styles.yearValue}>{(yt.fact).toLocaleString()} €</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

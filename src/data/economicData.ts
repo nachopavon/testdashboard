@@ -1,116 +1,92 @@
-const years = [2025, 2026]
+// economicData.ts - final clean implementation
+const years = [2025, 2026, 2027, 2028]
 
 type Requisite = { code: string; description: string; facturacion: number; estimacion: number }
 
-// generador simple para tener cifras consistentes y editables
-function base(n:number){ return Math.round((n + 1) * 1000 + (n % 7) * 1234) }
+const templates = [
+  'Soporte operativo y resolución de incidencias críticas',
+  'Mantenimiento correctivo y parches urgentes',
+  'Mantenimiento evolutivo y mejoras funcionales',
+  'Desarrollo de módulos y nuevas funcionalidades',
+  'Gestión de despliegues y automatización CI/CD',
+  'Monitorización, alertas y operaciones (SRE)',
+  'Documentación, formación y transferencia de conocimiento',
+  'Pruebas, QA y automatización de regresión',
+  'Integración con sistemas externos y APIs',
+  'Optimización de rendimiento e infraestructura'
+]
+
+const totalsByYear: Record<number, number> = {
+  2025: 220871.34,
+  2026: 2429584.77,
+  2027: 2429584.77,
+  2028: 220871.34
+}
+
+const estRate = 0.12
+const maxReqPerBigYear = 55
+const minReqPerSmallYear = 5
 
 const data: Record<string, any> = {}
+const maxTotal = Math.max(...Object.values(totalsByYear))
 
-years.forEach((y, yi) => {
+years.forEach((y) => {
   const yearKey = String(y)
-  const monthlyBase = 40 + yi * 10
+  const totalFact = totalsByYear[y] || 0
 
-  // monthly facturación (en euros)
-  const monthlyFacturacion = Array.from({length:12}, (_,m) => Math.round((monthlyBase + (m % 5) * 5 + yi*3 + (m%3)*2) * 1000))
-
-  // monthly estimación (en euros) ligeramente superior al facturado
-  const monthlyEstimacion = monthlyFacturacion.map((v, idx) => Math.round(v * (1 + ((idx % 4) * 0.03 + (yi?0.08:0.02)))))
-
-  const facturacion = monthlyFacturacion.reduce((a,b)=>a+b,0)
-  const estimacion = monthlyEstimacion.reduce((a,b)=>a+b,0)
-
-  // Generar 55 requisitos realistas para mantenimiento y desarrollo
-  const templates = [
-    'Soporte operativo 24/7: atención y resolución de incidentes críticos',
-    'Mantenimiento correctivo: resolución de fallos y parches urgentes',
-    'Mantenimiento evolutivo: cambios menores y mejoras continuas',
-    'Desarrollo de nuevas funcionalidades según roadmap',
-    'Gestión de despliegues y versionado (CI/CD)',
-    'Monitorización, alertas y operaciones (SRE/ops)',
-    'Documentación, capacitación y transferencia de conocimiento',
-    'Pruebas, QA y automatización de regresión',
-    'Integración con sistemas externos (catastro, padrón)',
-    'Optimización y refactorización de módulos legacy',
-    'Adaptación a normativa de accesibilidad y privacidad',
-    'Automatización de procesos batch y migración de datos',
-    'Implementación de cache y mejoras de rendimiento',
-    'Implementación de API para intercambio con terceros',
-    'Reportes KPI y cuadros de mando para seguimiento',
-    'Gestión de backups y recuperación ante desastres',
-    'Soporte en pruebas de aceptación (UAT) y homologación',
-    'Formación y talleres para equipos internos',
-    'Seguridad: corrección de vulnerabilidades y hardening',
-    'Integración con sede electrónica y firma digital',
-    'Desarrollo de asistente de entrada de datos y formularios',
-    'Mejora en gestión documental y almacenamiento',
-    'Ajustes de permisos y control de accesos por rol',
-    'Automatización de generación de certificados y credenciales',
-    'Implementación de notificaciones y sistema de alertas',
-    'Soporte en despliegues multi-entorno',
-    'Análisis y corrección de inconsistencias en datos históricos',
-    'Optimización de consultas y tiempos de respuesta',
-    'Análisis de seguridad y pruebas de penetración',
-    'Evolutivos para cumplimiento normativo',
-    'Desarrollo de integraciones móviles/UX responsive',
-    'Migración a nuevas versiones de frameworks',
-    'Asesoría técnica y revisión arquitectónica',
-    'Configuración y ajustes de monitorización de infra',
-    'Soporte remoto en ventanas de mantenimiento',
-    'Consolidación de logs y trazabilidad',
-    'Refactor y modularización para mantenibilidad',
-    'Implementación de pruebas de carga y escalado',
-    'Generación de informes ad-hoc para dirección',
-    'Mejora en accesibilidad y localización',
-    'Gestión de incidencias y seguimiento SLA',
-    'Implementación de analítica y telemetría',
-    'Adaptación de exportes e informes a nuevos formatos',
-    'Homologación con proveedores y APIs externas',
-    'Soporte en integración con pasarelas de pago',
-    'Mecanismos de auditoría y cumplimiento legal',
-    'Mejoras en encriptación y gestión de claves',
-    'Monitorización de costes y optimización cloud',
-    'Desarrollo de herramientas internas para productividad'
-  ]
-
-  let requisites: Requisite[] = Array.from({length:55}, (_,i)=>{
-    const code = `REQ.${String(i+1).padStart(2,'0')}`
-    const template = templates[i % templates.length]
-    const description = `${template} - alcance estimado para el año ${y}`
-    const factor = 1000 + (i % 11) * 250 + yi * 4000
-    const factBase = Math.round(base(i) * (1 + (i % 7) * 0.02) + factor)
-    const estBase = Math.round(factBase * (1 + 0.12 + (i % 5) * 0.02))
-    return { code, description, facturacion: factBase, estimacion: estBase }
+  const totalFactCents = Math.round(totalFact * 100)
+  const baseMonth = Math.floor(totalFactCents / 12)
+  let rem = totalFactCents - baseMonth * 12
+  const monthlyFacturacion = Array.from({ length: 12 }, () => {
+    const add = rem > 0 ? 1 : 0
+    if (rem > 0) rem -= 1
+    return (baseMonth + add) / 100
   })
 
-  // Ajustar las REQ para que sumen exactamente los totales mensuales calculados arriba
-  const sumReqFact = requisites.reduce((s,r)=>s + r.facturacion, 0)
-  const sumReqEst = requisites.reduce((s,r)=>s + r.estimacion, 0)
+  const totalEstCents = Math.round(totalFactCents * (1 + estRate))
+  const baseEst = Math.floor(totalEstCents / 12)
+  let remE = totalEstCents - baseEst * 12
+  const monthlyEstimacion = Array.from({ length: 12 }, () => {
+    const add = remE > 0 ? 1 : 0
+    if (remE > 0) remE -= 1
+    return (baseEst + add) / 100
+  })
 
-  // Si las sumas son cero (protección), no escalar
-  if(sumReqFact > 0){
-    const scaleFact = facturacion / sumReqFact
-    requisites = requisites.map(r => ({ ...r, facturacion: Math.round(r.facturacion * scaleFact) }))
-    // corregir diferencia por redondeo en el último elemento
-    const adjFact = requisites.reduce((s,r)=>s + r.facturacion, 0)
-    const diffFact = facturacion - adjFact
-    if(diffFact !== 0){
-      requisites[requisites.length - 1].facturacion += diffFact
-    }
+  const facturacion = Math.round(monthlyFacturacion.reduce((a: number, b: number) => a + b, 0) * 100) / 100
+  const estimacion = Math.round(monthlyEstimacion.reduce((a: number, b: number) => a + b, 0) * 100) / 100
+
+  const proportion = maxTotal > 0 ? totalFact / maxTotal : 1
+  let reqCount = Math.max(minReqPerSmallYear, Math.round(proportion * maxReqPerBigYear))
+  reqCount = Math.min(reqCount, maxReqPerBigYear)
+  if (reqCount < 1) reqCount = 1
+
+  const requisites: Requisite[] = []
+  const perReqBase = Math.floor(totalFactCents / reqCount)
+  let perReqRem = totalFactCents - perReqBase * reqCount
+  for (let i = 0; i < reqCount; i++) {
+    const add = perReqRem > 0 ? 1 : 0
+    if (perReqRem > 0) perReqRem -= 1
+    const factC = perReqBase + add
+    const estC = Math.round(factC * (1 + estRate))
+    requisites.push({ code: `REQ.${String(i + 1).padStart(2, '0')}`, description: `${templates[i % templates.length]} - alcance ${y}`, facturacion: factC / 100, estimacion: estC / 100 })
   }
 
-  if(sumReqEst > 0){
-    const scaleEst = estimacion / sumReqEst
-    requisites = requisites.map(r => ({ ...r, estimacion: Math.round(r.estimacion * scaleEst) }))
-    // corregir diferencia por redondeo en el último elemento
-    const adjEst = requisites.reduce((s,r)=>s + r.estimacion, 0)
-    const diffEst = estimacion - adjEst
-    if(diffEst !== 0){
-      requisites[requisites.length - 1].estimacion += diffEst
-    }
+  const sumFactCents = requisites.reduce((s, r) => s + Math.round(r.facturacion * 100), 0)
+  const diffFact = totalFactCents - sumFactCents
+  if (diffFact !== 0 && requisites.length > 0) {
+    const last = requisites[requisites.length - 1]
+    last.facturacion = Math.round((last.facturacion * 100 + diffFact)) / 100
+  }
+
+  const sumEstCents = requisites.reduce((s, r) => s + Math.round(r.estimacion * 100), 0)
+  const diffEst = totalEstCents - sumEstCents
+  if (diffEst !== 0 && requisites.length > 0) {
+    const last = requisites[requisites.length - 1]
+    last.estimacion = Math.round((last.estimacion * 100 + diffEst)) / 100
   }
 
   data[yearKey] = { monthlyFacturacion, monthlyEstimacion, facturacion, estimacion, requisites }
 })
 
 export default { years, data }
+
