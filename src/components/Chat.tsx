@@ -11,7 +11,7 @@ function findYearInText(text:string){
   return null
 }
 
-function answerFromData(q:string){
+  function answerFromData(q:string){
   const s = q.toLowerCase()
   // economic queries
   if(s.includes('factur') || s.includes('estim') || s.includes('coste')){
@@ -103,7 +103,11 @@ export default function Chat(){
 
   function clearHistory(){ setHistory([]); try{ localStorage.removeItem('td_chat_history') }catch(e){} }
 
-  function quickExample(example:string){ setInput(example); setTimeout(()=> send(), 120) }
+  function quickExample(example:string){
+    const q = example
+    const a = answerFromData(q) || 'Lo siento, no tengo datos exactos para esa pregunta.'
+    setHistory(h => [{from:'bot', text: a}, {from:'user', text: q}, ...h])
+  }
 
   return (
     <div className={styles.container}>
@@ -121,11 +125,26 @@ export default function Chat(){
             <div className={styles.welcome}>
               <p className={styles.welcomeTitle}>Pregunta lo que quieras</p>
               <p className={styles.welcomeSub}>Prueba estos ejemplos:</p>
-              <div className={styles.examples}>
-                <button onClick={()=>quickExample('¿Cuál es la facturación de 2026?')}>Facturación 2026</button>
-                <button onClick={()=>quickExample('¿Cómo están los indicadores NIV?')}>Indicadores NIV</button>
-                <button onClick={()=>quickExample('Resumen de requisitos')}>Resumen REQ</button>
-              </div>
+                  <div className={styles.examples}>
+                    {[
+                      '¿Cuál es la facturación de 2026?',
+                      '¿Cuál fue el mes con mayor facturación en 2026?',
+                      '¿Cómo están los indicadores NIV?',
+                      'Top 3 indicadores NIV por cumplimiento',
+                      '¿Cuántos requisitos hubo en 2027?',
+                      '¿Cuál es el objetivo de ANS-01 o NIV-01?',
+                      'Resumen de requisitos',
+                      'Dame un resumen ANS general'
+                    ].map((ex, idx) => {
+                      const ans = answerFromData(ex) || 'Respuesta no disponible'
+                      return (
+                        <div key={idx} className={styles.exampleItem}>
+                          <button onClick={()=>quickExample(ex)} className={styles.exampleBtn}>{ex}</button>
+                          <div className={styles.exampleAnswer}>{ans}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
             </div>
           ) : (
             history.map((h, i) => (
