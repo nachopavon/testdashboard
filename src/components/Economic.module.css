@@ -66,3 +66,18 @@
 .pagerBtn{background:var(--card-bg); border:1px solid #eee; padding:6px 8px; border-radius:6px}
 .pagerBtn[disabled]{opacity:0.4; cursor:default}
 .pagerInfo{font-size:13px; color:#666}
+
+.tableControls{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:12px}
+.searchInput{padding:6px 8px; border-radius:6px; border:1px solid #ddd}
+.selectSmall{padding:6px 8px; border-radius:6px; border:1px solid #ddd}
+
+/* sticky header */
+.table thead th{position:sticky; top:0; background:var(--card-bg); z-index:3}
+
+/* zebra rows */
+.table tbody tr:nth-child(odd){background:rgba(0,0,0,0.02)}
+
+/* responsive smaller font */
+@media (max-width:700px){
+	.table th, .table td{font-size:13px}
+}

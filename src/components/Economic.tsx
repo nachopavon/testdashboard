@@ -32,6 +32,34 @@ export default function Economic(){
   const totalReq = d.requisites.length
   const totalPages = Math.max(1, Math.ceil(totalReq / perPage))
   const pagedReqs = d.requisites.slice((page-1)*perPage, page*perPage)
+  // table improvements: search, sorting, rows per page
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<'code'|'description'|'facturacion'|'estimacion'>('code')
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc')
+  const [rowsPerPage, setRowsPerPage] = useState(perPage)
+
+  const filtered = d.requisites.filter((r:any)=>{
+    if(!search) return true
+    const s = search.toLowerCase()
+    return String(r.code).toLowerCase().includes(s) || String(r.description).toLowerCase().includes(s)
+  })
+
+  const sorted = filtered.slice().sort((a:any,b:any)=>{
+    const dir = sortDir === 'asc' ? 1 : -1
+    if(sortBy === 'facturacion' || sortBy === 'estimacion'){
+      return (a[sortBy] - b[sortBy]) * dir
+    }
+    return String(a[sortBy]).localeCompare(String(b[sortBy])) * dir
+  })
+
+  const totalReqFiltered = sorted.length
+  const totalPagesComputed = Math.max(1, Math.ceil(totalReqFiltered / rowsPerPage))
+  const currentPage = Math.min(page, totalPagesComputed)
+  const start = (currentPage - 1) * rowsPerPage
+  const paged = sorted.slice(start, start + rowsPerPage)
+
+  const totalsAll = sorted.reduce((acc:any, r:any)=>{ acc.fact += r.facturacion; acc.est += r.estimacion; return acc }, {fact:0, est:0})
+  const totalsPage = paged.reduce((acc:any, r:any)=>{ acc.fact += r.facturacion; acc.est += r.estimacion; return acc }, {fact:0, est:0})
 
   // export helpers (CSV / JSON)
   function download(filename:string, content:string, mime='text/plain'){
@@ -187,22 +215,50 @@ export default function Economic(){
 
       <div className={styles.table}>
         <h4>Requisitos / Petición</h4>
+        <div className={styles.tableControls}>
+          <div>
+            <label>Buscar: <input value={search} onChange={e=>{setSearch(e.target.value); setPage(1)}} className={styles.searchInput} placeholder="Código o descripción" /></label>
+          </div>
+          <div style={{display:'flex', gap:8, alignItems:'center'}}>
+            <label>Filas: <select value={rowsPerPage} onChange={e=>{setRowsPerPage(Number(e.target.value)); setPage(1)}} className={styles.selectSmall}><option>5</option><option>10</option><option>20</option></select></label>
+            <div className={styles.pager} aria-label="Paginación requisitos">
+              <button onClick={()=>setPage(1)} disabled={page===1} className={styles.pagerBtn} aria-label="Primera página">«</button>
+              <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className={styles.pagerBtn} aria-label="Página anterior">‹</button>
+              <span className={styles.pagerInfo}>Página {currentPage} de {totalPagesComputed}</span>
+              <button onClick={()=>setPage(p=>Math.min(totalPagesComputed,p+1))} disabled={page===totalPagesComputed} className={styles.pagerBtn} aria-label="Página siguiente">›</button>
+              <button onClick={()=>setPage(totalPagesComputed)} disabled={page===totalPagesComputed} className={styles.pagerBtn} aria-label="Última página">»</button>
+            </div>
+          </div>
+        </div>
+
         <table aria-describedby="req-desc">
           <caption id="req-desc" style={{display:'none'}}>Lista de requisitos y su facturación/estimación</caption>
-          <thead><tr><th>Requisito</th><th>Petición</th><th style={{textAlign:'right'}}>Facturación</th><th style={{textAlign:'right'}}>Estimación</th></tr></thead>
+          <thead>
+            <tr>
+              <th onClick={()=>{ setSortBy('code'); setSortDir(s=> s==='asc'?'desc':'asc')}} style={{cursor:'pointer'}}>Requisito</th>
+              <th onClick={()=>{ setSortBy('description'); setSortDir(s=> s==='asc'?'desc':'asc')}} style={{cursor:'pointer'}}>Petición</th>
+              <th style={{textAlign:'right', cursor:'pointer'}} onClick={()=>{ setSortBy('facturacion'); setSortDir(s=> s==='asc'?'desc':'asc')}}>Facturación</th>
+              <th style={{textAlign:'right', cursor:'pointer'}} onClick={()=>{ setSortBy('estimacion'); setSortDir(s=> s==='asc'?'desc':'asc')}}>Estimación</th>
+            </tr>
+          </thead>
           <tbody>
-            {pagedReqs.map((r:any)=> (
+            {paged.map((r:any)=> (
               <tr key={r.code}><td>{r.code}</td><td>{r.description}</td><td style={{textAlign:'right'}}>{r.facturacion.toLocaleString()} €</td><td style={{textAlign:'right'}}>{r.estimacion.toLocaleString()} €</td></tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={2} style={{textAlign:'right', fontWeight:700}}>Totales (página)</td>
+              <td style={{textAlign:'right', fontWeight:700}}>{totalsPage.fact.toLocaleString()} €</td>
+              <td style={{textAlign:'right', fontWeight:700}}>{totalsPage.est.toLocaleString()} €</td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{textAlign:'right', color:'#777'}}>Totales (filtro)</td>
+              <td style={{textAlign:'right', color:'#777'}}>{totalsAll.fact.toLocaleString()} €</td>
+              <td style={{textAlign:'right', color:'#777'}}>{totalsAll.est.toLocaleString()} €</td>
+            </tr>
+          </tfoot>
         </table>
-        <div className={styles.pager} aria-label="Paginación requisitos">
-          <button onClick={()=>setPage(1)} disabled={page===1} className={styles.pagerBtn} aria-label="Primera página">«</button>
-          <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className={styles.pagerBtn} aria-label="Página anterior">‹</button>
-          <span className={styles.pagerInfo}>Página {page} de {totalPages}</span>
-          <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className={styles.pagerBtn} aria-label="Página siguiente">›</button>
-          <button onClick={()=>setPage(totalPages)} disabled={page===totalPages} className={styles.pagerBtn} aria-label="Última página">»</button>
-        </div>
       </div>
     </div>
   )
