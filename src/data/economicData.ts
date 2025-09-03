@@ -35,24 +35,63 @@ years.forEach((y) => {
   const totalFact = totalsByYear[y] || 0
 
   const totalFactCents = Math.round(totalFact * 100)
-  const baseMonth = Math.floor(totalFactCents / 12)
-  let rem = totalFactCents - baseMonth * 12
-  const monthlyFacturacion = Array.from({ length: 12 }, () => {
-    const add = rem > 0 ? 1 : 0
-    if (rem > 0) rem -= 1
-    return (baseMonth + add) / 100
+
+  // determine active months per year: 2025 -> Oct(9)..Dec(11), 2026/2027 -> all months, 2028 -> Jan(0)..Feb(1)
+  let activeIdxs: number[]
+  if (y === 2025) activeIdxs = [9,10,11]
+  else if (y === 2028) activeIdxs = [0,1]
+  else activeIdxs = Array.from({length:12}, (_,i)=>i)
+
+  // distribute totalFactCents across active months evenly (in cents), remainder spread to first active months
+  const activeCount = activeIdxs.length || 1
+  const baseActive = Math.floor(totalFactCents / activeCount)
+  let remActive = totalFactCents - baseActive * activeCount
+  const monthlyFactCentsByActive = Array.from({length:12}, ()=>0)
+  for (let j=0;j<activeCount;j++){
+    const idx = activeIdxs[j]
+    const add = remActive > 0 ? 1 : 0
+    if (remActive > 0) remActive -= 1
+    monthlyFactCentsByActive[idx] = baseActive + add
+  }
+  // convert to euros for `monthlyFacturacion` (temporary)
+  const monthlyFacturacion = monthlyFactCentsByActive.map(c => c / 100)
+
+  // Adjust monthly distribution with deterministic per-month weights so each month varies
+  // but the annual total remains the same (work in cents to avoid float errors)
+  const monthlyFactCentsInit = monthlyFacturacion.map(m => Math.round(m * 100))
+  // create deterministic jitter weights per month
+  const variance = 0.12
+  const monthWeights = monthlyFactCentsInit.map((_, i) => {
+    const seed = y * 37 + i * 19
+    const x = Math.abs(Math.sin(seed) * 10000)
+    const frac = x - Math.floor(x)
+    const jitter = (frac - 0.5) * 2 * variance
+    return 1 + jitter
   })
+  const denomMonths = monthlyFactCentsInit.reduce((s, v, idx) => s + v * monthWeights[idx], 0) || 1
+  const alphaMonths = totalFactCents / denomMonths
+  const monthFactors = monthWeights.map(w => alphaMonths * w)
+  const cappedFactors = monthFactors.map(f => Math.max(0.2, Math.min(1.5, f)))
+  let adjustedMonthlyFactCents = monthlyFactCentsInit.map((v, idx) => Math.round(v * cappedFactors[idx]))
+  // distribute any remaining cents to match totalFactCents
+  let allocated = adjustedMonthlyFactCents.reduce((s, v) => s + v, 0)
+  let remaining = totalFactCents - allocated
+  for (let i = 0; remaining > 0; i = (i + 1) % 12) { adjustedMonthlyFactCents[i] += 1; remaining -= 1 }
+  for (let i = 0; remaining < 0; i = (i + 1) % 12) { if (adjustedMonthlyFactCents[i] > 0) { adjustedMonthlyFactCents[i] -= 1; remaining += 1 } }
+  // replace monthlyFacturacion with adjusted values (euros)
+  const monthlyFacturacionAdjusted = adjustedMonthlyFactCents.map(c => c / 100)
 
   const totalEstCents = Math.round(totalFactCents * (1 + estRate))
-  const baseEst = Math.floor(totalEstCents / 12)
-  let remE = totalEstCents - baseEst * 12
-  const monthlyEstimacion = Array.from({ length: 12 }, () => {
-    const add = remE > 0 ? 1 : 0
-    if (remE > 0) remE -= 1
-    return (baseEst + add) / 100
-  })
+  // derive monthly estimacion from adjusted monthly facturación proportionally, then normalize to match totalEstCents
+  let monthlyEstCents = adjustedMonthlyFactCents.map(c => Math.round(c * (1 + estRate)))
+  // adjust to exact totalEstCents
+  let estAllocated = monthlyEstCents.reduce((s, v) => s + v, 0)
+  let estRemaining = totalEstCents - estAllocated
+  for (let i = 0; estRemaining > 0; i = (i + 1) % 12) { monthlyEstCents[i] += 1; estRemaining -= 1 }
+  for (let i = 0; estRemaining < 0; i = (i + 1) % 12) { if (monthlyEstCents[i] > 0) { monthlyEstCents[i] -= 1; estRemaining += 1 } }
+  const monthlyEstimacion = monthlyEstCents.map(c => c / 100)
 
-  const facturacion = Math.round(monthlyFacturacion.reduce((a: number, b: number) => a + b, 0) * 100) / 100
+  const facturacion = Math.round(monthlyFacturacionAdjusted.reduce((a: number, b: number) => a + b, 0) * 100) / 100
   const estimacion = Math.round(monthlyEstimacion.reduce((a: number, b: number) => a + b, 0) * 100) / 100
 
   const proportion = maxTotal > 0 ? totalFact / maxTotal : 1
@@ -105,7 +144,7 @@ years.forEach((y) => {
   }
 
   // assign each requisite to a month index (0..11) based on cumulative monthly facturación
-  const monthlyFactCents = monthlyFacturacion.map(m => Math.round(m * 100))
+  const monthlyFactCents = adjustedMonthlyFactCents
   const cumMonths: number[] = monthlyFactCents.reduce((acc: number[], v: number) => {
     const last = acc.length ? acc[acc.length - 1] : 0
     acc.push(last + v)
@@ -122,7 +161,7 @@ years.forEach((y) => {
     requisites.push({ code: `REQ.${String(i + 1).padStart(2, '0')}`, description: `${templates[i % templates.length]} - alcance ${y}`, facturacion: factC / 100, estimacion: estC / 100, month: monthIdx })
   }
 
-  data[yearKey] = { monthlyFacturacion, monthlyEstimacion, facturacion, estimacion, requisites }
+  data[yearKey] = { monthlyFacturacion: monthlyFacturacionAdjusted, monthlyEstimacion, facturacion, estimacion, requisites }
 })
 
 export default { years, data }

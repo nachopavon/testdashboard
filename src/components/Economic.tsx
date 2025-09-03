@@ -315,50 +315,58 @@ export default function Economic(){
               })}
             </div>
           <div className={styles.barRow}>
-          {d.monthlyEstimacion.map((est:number, i:number)=>{
-            const fact = d.monthlyFacturacion[i] || 0
-            const hEst = Math.max(12, Math.round((est / maxMonthly) * maxBarHeight))
-            const hFact = Math.max(12, Math.round((fact / maxMonthly) * maxBarHeight))
-            return (
-              <div key={i} className={`${styles.barItem} ${selectedMonth===i?styles.selectedMonth:''}`}
-                tabIndex={0}
-                onClick={()=>setSelectedMonth(prev => prev===i?null:i)}
-                onFocus={(e)=>{
-                  const target = e.currentTarget as HTMLElement
-                  const grid = gridRef.current
-                  if(grid && target){
-                    const gridRect = grid.getBoundingClientRect()
-                    const targetRect = target.getBoundingClientRect()
-                    const left = targetRect.left - gridRect.left + (targetRect.width/2)
-                    const top = targetRect.top - gridRect.top - 8
-                    setTooltip({x: Math.round(left), y: Math.round(top), html:`<strong>${months[i]}</strong><br/>Previsión: ${est.toLocaleString()} €<br/>Coste: ${fact.toLocaleString()} €`})
-                  }
-                }}
-                onBlur={()=>setTooltip(null)}
-                onMouseEnter={(e)=>{
-                  const target = e.currentTarget as HTMLElement
-                  const grid = gridRef.current
-                  if(grid && target){
-                    const gridRect = grid.getBoundingClientRect()
-                    const targetRect = target.getBoundingClientRect()
-                    const left = targetRect.left - gridRect.left + (targetRect.width/2)
-                    const top = targetRect.top - gridRect.top - 8
-                    setTooltip({x: Math.round(left), y: Math.round(top), html:`<strong>${months[i]}</strong><br/>Previsión: ${est.toLocaleString()} €<br/>Coste: ${fact.toLocaleString()} €`})
-                  }
-                }}
-                onMouseLeave={()=>setTooltip(null)}>
-                <div className={styles.barValues} aria-hidden>
-                  <span className={styles.barValueEst}>{est.toLocaleString()} €</span>
-                  <span className={styles.barValueFact}>{fact.toLocaleString()} €</span>
+          {(() => {
+            // build a list of visible month indices (hide months where both est and fact are 0)
+            const visibleIdxs = d.monthlyEstimacion.map((est:number, i:number)=>{
+              const fact = d.monthlyFacturacion[i] || 0
+              return (est > 0 || fact > 0) ? i : -1
+            }).filter((v:number)=>v >= 0)
+            return visibleIdxs.map((i:number, vi:number) => {
+              const est = d.monthlyEstimacion[i] || 0
+              const fact = d.monthlyFacturacion[i] || 0
+              const hEst = Math.max(12, Math.round((est / maxMonthly) * maxBarHeight))
+              const hFact = Math.max(12, Math.round((fact / maxMonthly) * maxBarHeight))
+              return (
+                <div key={i} className={`${styles.barItem} ${selectedMonth===i?styles.selectedMonth:''}`}
+                  tabIndex={0}
+                  onClick={()=>setSelectedMonth(prev => prev===i?null:i)}
+                  onFocus={(e)=>{
+                    const target = e.currentTarget as HTMLElement
+                    const grid = gridRef.current
+                    if(grid && target){
+                      const gridRect = grid.getBoundingClientRect()
+                      const targetRect = target.getBoundingClientRect()
+                      const left = targetRect.left - gridRect.left + (targetRect.width/2)
+                      const top = targetRect.top - gridRect.top - 8
+                      setTooltip({x: Math.round(left), y: Math.round(top), html:`<strong>${months[i]}</strong><br/>Previsión: ${est.toLocaleString()} €<br/>Coste: ${fact.toLocaleString()} €`})
+                    }
+                  }}
+                  onBlur={()=>setTooltip(null)}
+                  onMouseEnter={(e)=>{
+                    const target = e.currentTarget as HTMLElement
+                    const grid = gridRef.current
+                    if(grid && target){
+                      const gridRect = grid.getBoundingClientRect()
+                      const targetRect = target.getBoundingClientRect()
+                      const left = targetRect.left - gridRect.left + (targetRect.width/2)
+                      const top = targetRect.top - gridRect.top - 8
+                      setTooltip({x: Math.round(left), y: Math.round(top), html:`<strong>${months[i]}</strong><br/>Previsión: ${est.toLocaleString()} €<br/>Coste: ${fact.toLocaleString()} €`})
+                    }
+                  }}
+                  onMouseLeave={()=>setTooltip(null)}>
+                  <div className={styles.barValues} aria-hidden>
+                    <span className={styles.barValueEst}>{est.toLocaleString()} €</span>
+                    <span className={styles.barValueFact}>{fact.toLocaleString()} €</span>
+                  </div>
+                  <div className={styles.barGroup} aria-hidden>
+                    <div className={styles.barEst} style={{height: `${hEst}px`, ['--target-height' as any]: `${hEst}px`, animationDelay: `${vi*70}ms`, opacity: showEst?1:0.12}} />
+                    <div className={styles.barFact} style={{height: `${hFact}px`, ['--target-height' as any]: `${hFact}px`, animationDelay: `${vi*70}ms`, opacity: showFact?1:0.12}} />
+                  </div>
+                  <div className={styles.barLabel}>{months[i]}</div>
                 </div>
-                <div className={styles.barGroup} aria-hidden>
-                  <div className={styles.barEst} style={{height: `${hEst}px`, ['--target-height' as any]: `${hEst}px`, animationDelay: `${i*70}ms`, opacity: showEst?1:0.12}} />
-                  <div className={styles.barFact} style={{height: `${hFact}px`, ['--target-height' as any]: `${hFact}px`, animationDelay: `${i*70}ms`, opacity: showFact?1:0.12}} />
-                </div>
-                <div className={styles.barLabel}>{months[i]}</div>
-              </div>
-            )
-          })}
+              )
+            })
+          })()}
           </div>
           {tooltip && <div className={styles.tooltip} role="status" aria-live="polite" dangerouslySetInnerHTML={{__html:tooltip.html}} style={{left:tooltip.x, top:tooltip.y, opacity:1}} />}
         </div>
