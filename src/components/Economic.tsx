@@ -38,7 +38,9 @@ function AnimatedNumber({ value, duration = 600, format = (n:number)=>String(n) 
 }
 
 export default function Economic(){
-  const [year, setYear] = useState(String(econData.years[0]))
+  // prefer 2026 as the default year when available, otherwise fallback to the first available year
+  const defaultYear = econData.years.includes(2026) ? String(2026) : String(econData.years[0])
+  const [year, setYear] = useState(defaultYear)
   const years = econData.years.map(String)
   const d = econData.data[year]
 
