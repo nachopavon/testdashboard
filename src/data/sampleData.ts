@@ -1,6 +1,6 @@
 export const months = [
-  'enero de 2025', 'febrero de 2025', 'marzo de 2025', 'abril de 2025', 'mayo de 2025', 'junio de 2025',
-  'julio de 2025', 'agosto de 2025', 'septiembre de 2025', 'octubre de 2025', 'noviembre de 2025', 'diciembre de 2025'
+  'enero de 2026', 'febrero de 2026', 'marzo de 2026', 'abril de 2026', 'mayo de 2026', 'junio de 2026',
+  'julio de 2026', 'agosto de 2026', 'septiembre de 2026', 'octubre de 2026', 'noviembre de 2026', 'diciembre de 2026'
 ]
 
 export const reqs = ['REQ.01','REQ.02','REQ.03','REQ.04','REQ.05','REQ.06','REQ.07','REQ.08']

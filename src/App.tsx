@@ -30,7 +30,7 @@ export default function App(){
         {view === 'ans' ? (
           <>
             <HeaderFilters months={dataMonths} reqs={dataReqs} month={filters.month} lote={filters.lote} req={filters.req} onChange={setFilters} />
-            <AnsDashboard />
+            <AnsDashboard filters={filters} />
           </>
         ) : (
           <Economic />

@@ -7,9 +7,12 @@ type Indicator = {
   monthly: { [month:string]: number }
 }
 
+// months from October 2025 through February 2028 (inclusive)
 const months = [
-  'enero de 2025','febrero de 2025','marzo de 2025','abril de 2025','mayo de 2025','junio de 2025',
-  'julio de 2025','agosto de 2025','septiembre de 2025','octubre de 2025','noviembre de 2025','diciembre de 2025'
+  'octubre de 2025','noviembre de 2025','diciembre de 2025',
+  'enero de 2026','febrero de 2026','marzo de 2026','abril de 2026','mayo de 2026','junio de 2026','julio de 2026','agosto de 2026','septiembre de 2026','octubre de 2026','noviembre de 2026','diciembre de 2026',
+  'enero de 2027','febrero de 2027','marzo de 2027','abril de 2027','mayo de 2027','junio de 2027','julio de 2027','agosto de 2027','septiembre de 2027','octubre de 2027','noviembre de 2027','diciembre de 2027',
+  'enero de 2028','febrero de 2028'
 ]
 
 function genSeries(seed:number, base:number){
