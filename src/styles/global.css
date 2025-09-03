@@ -1,5 +1,16 @@
-:root{--green:#184f34; --green-light:#2f8b58; --card-bg:#fff; --muted:#666}
+:root{
+	--accent:#2f8b58; /* primary */
+	--accent-2:#186a45; /* dark primary */
+	--bg:#f3f5f4;
+	--card-bg:#ffffff;
+	--muted:#666666;
+	--card-shadow: 0 8px 24px rgba(16,24,32,0.08);
+	--transition-fast: 180ms cubic-bezier(.2,.9,.2,1);
+}
 *{box-sizing:border-box}
 html,body,#root{height:100%; margin:0}
-body{background:#f3f5f4; font-family:Inter, Arial, sans-serif}
+body{background:var(--bg); font-family:Inter, Arial, sans-serif; color:#111}
 button{cursor:pointer}
+
+/* subtle default transitions */
+*{transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast)}
