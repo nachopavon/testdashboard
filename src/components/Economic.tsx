@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import econData from '../data/economicData'
 import styles from './Economic.module.css'
+import { useRef } from 'react'
 
 export default function Economic(){
   const [year, setYear] = useState(String(econData.years[0]))
@@ -15,6 +16,7 @@ export default function Economic(){
   const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 
   const [tooltip, setTooltip] = useState<{x:number;y:number;text:string}|null>(null)
+  const gridRef = useRef<HTMLDivElement|null>(null)
 
   // yearly comparison small bar data
   const otherYear = years.find(y=>y!==year) || years[0]
@@ -79,7 +81,19 @@ export default function Economic(){
             const hFact = Math.max(12, Math.round((fact / maxMonthly) * maxBarHeight))
             return (
               <div key={i} className={styles.barItem}
-                onMouseEnter={(e)=>setTooltip({x:(e.nativeEvent as any).offsetX, y:(e.nativeEvent as any).offsetY, text:`Previsión ${est.toLocaleString()} € · Coste ${fact.toLocaleString()} €`})}
+                onMouseEnter={(e)=>{
+                  const target = e.currentTarget as HTMLElement
+                  const grid = gridRef.current
+                  if(grid && target){
+                    const gridRect = grid.getBoundingClientRect()
+                    const targetRect = target.getBoundingClientRect()
+                    const left = targetRect.left - gridRect.left + (targetRect.width/2)
+                    const top = targetRect.top - gridRect.top
+                    setTooltip({x: Math.round(left), y: Math.round(top), text:`Previsión ${est.toLocaleString()} € · Coste ${fact.toLocaleString()} €`})
+                  } else {
+                    setTooltip({x:0,y:0,text:`Previsión ${est.toLocaleString()} € · Coste ${fact.toLocaleString()} €`})
+                  }
+                }}
                 onMouseLeave={()=>setTooltip(null)}>
                 <div className={styles.barValues}>
                   <span className={styles.barValueEst}>{est.toLocaleString()} €</span>
