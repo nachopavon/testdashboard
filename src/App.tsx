@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
 import HeaderFilters from './components/HeaderFilters'
 import Card from './components/Card'
@@ -8,7 +8,11 @@ import styles from './App.module.css'
 
 export default function App(){
   const [filters, setFilters] = useState({ month: dataMonths[3], lote: 'Lote 2', req: dataReqs[0] })
-  const [view, setView] = useState<'ans'|'econ'>('econ')
+  const [view, setView] = useState<'ans'|'econ'>(()=>{
+    try{ const v = localStorage.getItem('td_view'); return (v==='ans'||v==='econ')? v : 'econ' }catch(e){ return 'econ' }
+  })
+
+  useEffect(()=>{ try{ localStorage.setItem('td_view', view) }catch(e){} }, [view])
 
   const metrics = sampleData.data[filters.month][filters.req]
 

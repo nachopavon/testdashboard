@@ -7,6 +7,15 @@ export default function Economic(){
   const years = econData.years.map(String)
   const d = econData.data[year]
 
+  // normalize monthly bars: compute max of both series to scale heights
+  const estArr = d.monthlyEstimacion || []
+  const factArr = d.monthlyFacturacion || []
+  const maxMonthly = Math.max(...estArr, ...factArr, 1)
+  const maxBarHeight = 120 // px
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+
+  const [tooltip, setTooltip] = useState<{x:number;y:number;text:string}|null>(null)
+
   // yearly comparison small bar data
   const otherYear = years.find(y=>y!==year) || years[0]
   const comp = econData.data[otherYear]
@@ -52,16 +61,40 @@ export default function Economic(){
 
       <div className={styles.monthly}>
         <h4>Coste y previsión mensual</h4>
-        <div className={styles.barRow}>
-          {d.monthlyEstimacion.map((est:number, i:number)=>(
-            <div key={i} className={styles.barItem}>
-              <div className={styles.barGroup}>
-                <div className={styles.barEst} style={{height: `${Math.max(20, est / 1000)}px`}} title={`Estimación: ${est}`} />
-                <div className={styles.barFact} style={{height: `${Math.max(20, d.monthlyFacturacion[i] / 1000)}px`}} title={`Facturación: ${d.monthlyFacturacion[i]}`} />
+        <div className={styles.legend}>
+          <div className={styles.legendItem}><span className={styles.legendBoxEst}></span> Previsión</div>
+          <div className={styles.legendItem}><span className={styles.legendBoxFact}></span> Coste</div>
+        </div>
+        <div className={styles.monthlyGrid}>
+          <div className={styles.verticalAxis}>
+            {Array.from({length:4}).map((_,i)=>{
+              const val = Math.round((maxMonthly/4)*(4-i))
+              return <div key={i} className={styles.axisTick}><span className={styles.axisLabel}>{val.toLocaleString()}</span></div>
+            })}
+          </div>
+          <div className={styles.barRow}>
+          {d.monthlyEstimacion.map((est:number, i:number)=>{
+            const fact = d.monthlyFacturacion[i] || 0
+            const hEst = Math.max(12, Math.round((est / maxMonthly) * maxBarHeight))
+            const hFact = Math.max(12, Math.round((fact / maxMonthly) * maxBarHeight))
+            return (
+              <div key={i} className={styles.barItem}
+                onMouseEnter={(e)=>setTooltip({x:(e.nativeEvent as any).offsetX, y:(e.nativeEvent as any).offsetY, text:`Previsión ${est.toLocaleString()} € · Coste ${fact.toLocaleString()} €`})}
+                onMouseLeave={()=>setTooltip(null)}>
+                <div className={styles.barValues}>
+                  <span className={styles.barValueEst}>{est.toLocaleString()} €</span>
+                  <span className={styles.barValueFact}>{fact.toLocaleString()} €</span>
+                </div>
+                <div className={styles.barGroup}>
+                  <div className={styles.barEst} style={{height: `${hEst}px`}} />
+                  <div className={styles.barFact} style={{height: `${hFact}px`}} />
+                </div>
+                <div className={styles.barLabel}>{months[i]}</div>
               </div>
-              <div className={styles.barLabel}>{['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][i]}</div>
-            </div>
-          ))}
+            )
+          })}
+          </div>
+          {tooltip && <div className={styles.tooltip} style={{left:tooltip.x, top:tooltip.y}}>{tooltip.text}</div>}
         </div>
       </div>
 
