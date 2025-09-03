@@ -8,7 +8,7 @@ import styles from './App.module.css'
 
 export default function App(){
   const [filters, setFilters] = useState({ month: dataMonths[3], lote: 'Lote 2', req: dataReqs[0] })
-  const [view, setView] = useState<'ans'|'econ'>('ans')
+  const [view, setView] = useState<'ans'|'econ'>('econ')
 
   const metrics = sampleData.data[filters.month][filters.req]
 
