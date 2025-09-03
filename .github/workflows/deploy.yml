@@ -30,8 +30,12 @@ jobs:
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
+        # If your repo or organisation restricts GITHUB_TOKEN pushes, create a
+        # Personal Access Token (PAT) with `repo` scope and save it as the
+        # repository secret `GH_PAGES`, then the action will use that token.
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer a personal token if provided; fallback to GITHUB_TOKEN
+          github_token: ${{ secrets.GH_PAGES || secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
           user_name: github-actions[bot]
