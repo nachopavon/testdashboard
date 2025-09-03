@@ -1,0 +1,5 @@
+:root{--green:#184f34; --green-light:#2f8b58; --card-bg:#fff; --muted:#666}
+*{box-sizing:border-box}
+html,body,#root{height:100%; margin:0}
+body{background:#f3f5f4; font-family:Inter, Arial, sans-serif}
+button{cursor:pointer}

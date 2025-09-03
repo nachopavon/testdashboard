@@ -1,0 +1,34 @@
+import React, { useState } from 'react'
+import Sidebar from './components/Sidebar'
+import HeaderFilters from './components/HeaderFilters'
+import Card from './components/Card'
+import sampleData, { months as dataMonths, reqs as dataReqs } from './data/sampleData'
+import Economic from './components/Economic'
+import styles from './App.module.css'
+
+export default function App(){
+  const [filters, setFilters] = useState({ month: dataMonths[3], lote: 'Lote 2', req: dataReqs[0] })
+  const [view, setView] = useState<'ans'|'econ'>('ans')
+
+  const metrics = sampleData.data[filters.month][filters.req]
+
+  return (
+    <div className={styles.app}>
+      <Sidebar view={view} onChange={setView} />
+      <div className={styles.main}>
+        {view === 'ans' ? (
+          <>
+            <HeaderFilters months={dataMonths} reqs={dataReqs} month={filters.month} lote={filters.lote} req={filters.req} onChange={setFilters} />
+            <div className={styles.grid}>
+              {metrics.map(item => (
+                <Card key={item.id} item={item as any} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <Economic />
+        )}
+      </div>
+    </div>
+  )
+}

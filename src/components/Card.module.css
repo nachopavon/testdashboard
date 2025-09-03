@@ -1,0 +1,10 @@
+.card{background:var(--card-bg); border-radius:10px; padding:18px; min-height:220px; box-shadow:0 1px 4px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:12px}
+.headerRow{display:flex; flex-direction:column; align-items:center}
+.title{font-weight:800; font-size:14px}
+.subtitle{color:var(--muted); font-size:13px; margin-top:6px}
+.bodyRow{display:flex; gap:12px; align-items:center; justify-content:center}
+.donutCol{flex:0 0 140px; display:flex; align-items:center; justify-content:center}
+.metricsCol{display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:6px}
+.metricLarge{font-size:24px; font-weight:800}
+.metricLabel{color:var(--muted); font-size:13px}
+.metricSmall{color:var(--muted); font-size:12px}

@@ -1,0 +1,5 @@
+.gauge{display:flex; flex-direction:column; align-items:center; width:100%}
+.chartWrap{width:100%; display:flex; justify-content:center; align-items:flex-end}
+.donut{display:block}
+.value{font-size:40px; font-weight:800; color:#111}
+.unit{margin-left:6px; color:var(--muted); font-size:16px}
