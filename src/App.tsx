@@ -5,11 +5,12 @@ import Card from './components/Card'
 import sampleData, { months as dataMonths, reqs as dataReqs } from './data/sampleData'
 import Economic from './components/Economic'
 import AnsDashboard from './components/Ans/AnsDashboard'
+import Chat from './components/Chat'
 import styles from './App.module.css'
 
 export default function App(){
   const [filters, setFilters] = useState({ month: dataMonths[3], lote: 'Lote 2', req: dataReqs[0] })
-  const [view, setView] = useState<'ans'|'econ'>(()=>{
+  const [view, setView] = useState<'ans'|'econ'|'chat'>(()=>{
     try{ const v = localStorage.getItem('td_view'); return (v==='ans'||v==='econ')? v : 'econ' }catch(e){ return 'econ' }
   })
 
@@ -32,8 +33,10 @@ export default function App(){
             <HeaderFilters months={dataMonths} reqs={dataReqs} month={filters.month} lote={filters.lote} req={filters.req} onChange={setFilters} />
             <AnsDashboard filters={filters} />
           </>
-        ) : (
+        ) : view === 'econ' ? (
           <Economic />
+        ) : (
+          <Chat />
         )}
       </div>
     </div>

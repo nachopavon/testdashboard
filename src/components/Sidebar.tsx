@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import styles from './Sidebar.module.css'
 
 type Props = {
-  view: 'ans'|'econ'
-  onChange: (v:'ans'|'econ')=>void
+  view: 'ans'|'econ'|'chat'
+  onChange: (v:'ans'|'econ'|'chat')=>void
   ansCount?: number
   econCount?: number
 }
@@ -53,6 +53,19 @@ export default function Sidebar({view='ans', onChange, ansCount=0, econCount=0}:
           </svg>
           <span className={styles.label}>Seguimiento ANS</span>
           <span className={styles.badge} aria-hidden>{ansCount}</span>
+        </button>
+
+        <button
+          className={`${styles.navBtn} ${view==='chat'?styles.btnActive:''}`}
+          onClick={()=>onChange('chat')}
+          onKeyDown={(e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onChange('chat') } }}
+          aria-pressed={view==='chat'}
+          title="Chat sobre datos"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M4 4h16v12H7l-3 3V4z" fill="currentColor" />
+          </svg>
+          <span className={styles.label}>Chat datos</span>
         </button>
       </nav>
 
