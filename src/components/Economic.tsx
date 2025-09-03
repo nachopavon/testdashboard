@@ -108,15 +108,15 @@ export default function Economic(){
                   <span className={styles.barValueFact}>{fact.toLocaleString()} €</span>
                 </div>
                 <div className={styles.barGroup}>
-                  <div className={styles.barEst} style={{height: `${hEst}px`}} />
-                  <div className={styles.barFact} style={{height: `${hFact}px`}} />
+                  <div className={styles.barEst} style={{height: `${hEst}px`, animation:`barGrow .42s cubic-bezier(.2,.9,.2,1) forwards ${i*70}ms`}} />
+                  <div className={styles.barFact} style={{height: `${hFact}px`, animation:`barGrow .42s cubic-bezier(.2,.9,.2,1) forwards ${i*70}ms`}} />
                 </div>
                 <div className={styles.barLabel}>{months[i]}</div>
               </div>
             )
           })}
           </div>
-          {tooltip && <div className={styles.tooltip} style={{left:tooltip.x, top:tooltip.y}}>{tooltip.text}</div>}
+          {tooltip && <div className={styles.tooltip} style={{left:tooltip.x, top:tooltip.y, opacity:1}}>{tooltip.text}</div>}
         </div>
       </div>
 

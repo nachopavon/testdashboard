@@ -34,6 +34,11 @@
 .barFact{width:18px; background:var(--accent); border-radius:4px; transition:height .28s var(--transition-fast), transform .28s var(--transition-fast)}
 .barLabel{font-size:12px; color:#666}
 .tooltip{position:absolute; background:#111; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; transform:translate(-50%,-120%); pointer-events:none; z-index:20; box-shadow:0 6px 16px rgba(0,0,0,0.24); opacity:0; transition:opacity .14s ease}
+
+@keyframes barGrow{
+	from{height:0}
+	to{height:var(--target-height)}
+}
 .barItem:hover .barEst{transform:translateY(-6px)}
 .barItem:hover .barFact{transform:translateY(-6px)}
 .barItem:hover .cardSmall,.barItem:hover .largeDonut{transform:translateY(-4px)}
