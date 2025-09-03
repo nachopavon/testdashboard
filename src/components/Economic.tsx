@@ -1,12 +1,49 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import econData from '../data/economicData'
 import styles from './Economic.module.css'
-import { useRef } from 'react'
+
+// tiny animated number component (interpolates values)
+function AnimatedNumber({ value, duration = 600, format = (n:number)=>String(n) }: { value: number, duration?: number, format?: (n:number)=>string }){
+  const [display, setDisplay] = useState(value)
+  const rafRef = useRef<number | null>(null)
+  const startRef = useRef<number | null>(null)
+  const fromRef = useRef<number>(value)
+
+  useEffect(()=>{
+    const from = fromRef.current
+    const to = value
+    if(from === to){
+      setDisplay(to)
+      return
+    }
+    const start = performance.now()
+    startRef.current = start
+    const step = (ts:number)=>{
+      if(startRef.current === null) return
+      const t = Math.min(1, (ts - start) / duration)
+      const eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t // easeInOut
+      const cur = Math.round((from + (to - from) * eased))
+      setDisplay(cur)
+      if(t < 1){
+        rafRef.current = requestAnimationFrame(step)
+      } else {
+        fromRef.current = to
+      }
+    }
+    rafRef.current = requestAnimationFrame(step)
+    return ()=>{ if(rafRef.current) cancelAnimationFrame(rafRef.current) }
+  },[value,duration])
+
+  return <span>{format(display)}</span>
+}
 
 export default function Economic(){
   const [year, setYear] = useState(String(econData.years[0]))
   const years = econData.years.map(String)
   const d = econData.data[year]
+
+  // selected month for YTD comparisons (null => show annual)
+  const [selectedMonth, setSelectedMonth] = useState<number|null>(null)
 
   // normalize monthly bars: compute max of both series to scale heights
   const estArr = d.monthlyEstimacion || []
@@ -26,6 +63,25 @@ export default function Economic(){
   const otherYear = years.find(y=>y!==year) || years[0]
   const comp = econData.data[otherYear]
 
+  // compute YTD totals for selected month (inclusive)
+  const selIdx = selectedMonth
+  const ytd = selIdx !== null ? {
+    est: d.monthlyEstimacion.slice(0, selIdx+1).reduce((s:number,v:number)=>s+v,0),
+    fact: d.monthlyFacturacion.slice(0, selIdx+1).reduce((s:number,v:number)=>s+v,0),
+    monthsCount: selIdx + 1
+  } : null
+
+  const otherData = selIdx !== null && econData.data[otherYear] ? {
+    est: econData.data[otherYear].monthlyEstimacion.slice(0, selIdx+1).reduce((s:number,v:number)=>s+v,0),
+    fact: econData.data[otherYear].monthlyFacturacion.slice(0, selIdx+1).reduce((s:number,v:number)=>s+v,0)
+  } : null
+
+  // helper to compute percent change safely
+  const pctChange = (a:number, b:number) => {
+    if(b === 0) return a === 0 ? 0 : 100
+    return ((a - b) / Math.abs(b)) * 100
+  }
+
   // deterministic percent per year between 85% and 98%
   function pctForYear(yStr:string){
     const y = parseInt(yStr)
@@ -35,10 +91,39 @@ export default function Economic(){
     return Math.min(0.98, Math.max(0.85, pctInt / 100))
   }
 
+  // compute per-month percentages with deterministic jitter but preserving total annual facturation
+  function perMonthAdjustments(yearStr:string){
+    const data = econData.data[yearStr]
+    const ests: number[] = data.monthlyEstimacion || []
+    const facts: number[] = data.monthlyFacturacion || []
+    const totalFact = facts.reduce((s:number,v:number)=>s+v,0)
+    const variance = 0.12 // up to ±12% variation
+    const weights: number[] = ests.map((_:number,i:number)=>{
+      const seed = parseInt(yearStr,10) * 31 + i * 17
+      const x = Math.abs(Math.sin(seed) * 10000)
+      const frac = x - Math.floor(x)
+      const jitter = (frac - 0.5) * 2 * variance // in [-variance, variance]
+      return 1 + jitter
+    })
+    const denom = ests.reduce((s:number,v:number,idx:number)=> s + v * weights[idx], 0) || 1
+    const alpha = totalFact / denom
+    const pcts: number[] = weights.map((w:number) => alpha * w)
+    const capped: number[] = pcts.map((p:number) => Math.max(0.2, Math.min(1.5, p)))
+    const adjustedFacts: number[] = ests.map((e:number, idx:number)=> Math.round(e * capped[idx]))
+    return {pcts:capped, adjustedFacts}
+  }
+
   // prepare totals per year for an annual overview
   const yearList = econData.years.map(String)
   const yearTotals = yearList.map(y => ({ year: y, fact: econData.data[y]?.facturacion || 0, est: econData.data[y]?.estimacion || 0 }))
   const maxYearFact = Math.max(...yearTotals.map(y=>y.fact), 1)
+
+  // per-month adjustments for the current year
+  const perMonthResults = perMonthAdjustments(year)
+  const perMonthPcts = perMonthResults.pcts
+  const perMonthAdjustedFacts = perMonthResults.adjustedFacts
+  const pctForDisplay = selectedMonth !== null ? (perMonthPcts[selectedMonth] || pctForYear(year)) : pctForYear(year)
+  const centerFactValue = selectedMonth !== null ? (perMonthAdjustedFacts[selectedMonth] || 0) : d.facturacion
 
   // pagination for requisites
   const [page, setPage] = useState(1)
@@ -58,7 +143,10 @@ export default function Economic(){
     return String(r.code).toLowerCase().includes(s) || String(r.description).toLowerCase().includes(s)
   })
 
-  const sorted = filtered.slice().sort((a:any,b:any)=>{
+  // if a month is selected, further filter requisites to those assigned to months <= selectedMonth (YTD window)
+  const filteredByMonth = selectedMonth !== null ? filtered.filter((r:any)=> typeof r.month === 'number' ? r.month <= selectedMonth : true) : filtered
+
+  const sorted = filteredByMonth.slice().sort((a:any,b:any)=>{
     const dir = sortDir === 'asc' ? 1 : -1
     if(sortBy === 'facturacion' || sortBy === 'estimacion'){
       return (a[sortBy] - b[sortBy]) * dir
@@ -128,20 +216,25 @@ export default function Economic(){
           {(() => {
             const r = 64
             const circ = 2 * Math.PI * r
-      const pct = pctForYear(String(year))
+            const pct = pctForDisplay
             const dash = Math.round(pct * circ)
-      const color = pct >= 0.95 ? 'var(--accent)' : '#2f8b58'
-      const pctLabel = Math.round(pct * 1000) / 10
+            const color = pct >= 0.95 ? 'var(--accent)' : '#2f8b58'
+            const pctLabel = Math.round(pct * 1000) / 10
             return (
               <svg width="420" height="180" viewBox="0 0 420 180" aria-hidden>
-                <circle cx="120" cy="90" r={r} stroke="#eee" strokeWidth="28" fill="none" />
-                <circle cx="120" cy="90" r={r} stroke={color} strokeWidth="28" fill="none"
+                <circle className={styles.donutBg} cx="120" cy="90" r={r} stroke="#eee" strokeWidth="28" fill="none" />
+                <circle className={styles.donutArc} cx="120" cy="90" r={r} stroke={color} strokeWidth="28" fill="none"
                   strokeDasharray={`${dash} ${Math.round(circ)}`} strokeLinecap="round" transform="rotate(-90 120 90)" />
 
-        <text x="120" y="84" fontSize="28" fontWeight="700" textAnchor="middle" fill="var(--accent)">{pctLabel}%</text>
-        <text x="120" y="104" fontSize="12" fill="var(--accent)" textAnchor="middle">facturado</text>
+                <text x="120" y="74" fontSize="26" fontWeight="700" textAnchor="middle" fill="var(--accent)">{pctLabel}%</text>
+                <text x="120" y="94" fontSize="11" fill="var(--accent)" textAnchor="middle">facturado</text>
 
-                <text x="240" y="90" fontSize="14" fontWeight="600">{(d.facturacion/1000).toLocaleString()} mil€</text>
+                <text x="120" y="120" fontSize="14" fontWeight="600" textAnchor="middle" className={styles.centerAmount}>
+                  <tspan>
+                    <AnimatedNumber value={centerFactValue} format={(n)=> (n).toLocaleString('es-ES') + ' €'} />
+                  </tspan>
+                </text>
+                <text x="240" y="90" fontSize="14" fontWeight="600">{(selectedMonth !== null && ytd) ? (Math.round((ytd.fact/1000))).toLocaleString() : (Math.round((d.facturacion/1000))).toLocaleString()} mil€</text>
               </svg>
             )
           })()}
@@ -149,12 +242,30 @@ export default function Economic(){
 
         <div className={styles.sideCards}>
           <div className={styles.cardSmall}>
-            <div className={styles.big}>{d.estimacion.toLocaleString()} €</div>
-            <div className={styles.muted}>Estimación anual</div>
+            <div className={styles.big}>
+              {selectedMonth !== null ? (
+                <AnimatedNumber value={ytd!.est} format={(n)=>n.toLocaleString('es-ES') + ' €'} />
+              ) : (
+                <AnimatedNumber value={d.estimacion} format={(n)=>n.toLocaleString('es-ES') + ' €'} />
+              )}
+            </div>
+            <div className={styles.muted}>{selectedMonth !== null ? `Estimación hasta ${months[selectedMonth]}` : 'Estimación anual'}</div>
           </div>
           <div className={styles.cardSmall}>
-            <div className={styles.big}>{d.facturacion.toLocaleString()} €</div>
-            <div className={styles.muted}>Facturación anual</div>
+            <div className={styles.big}>
+              {selectedMonth !== null ? (
+                <AnimatedNumber value={ytd!.fact} format={(n)=>n.toLocaleString('es-ES') + ' €'} />
+              ) : (
+                <AnimatedNumber value={d.facturacion} format={(n)=>n.toLocaleString('es-ES') + ' €'} />
+              )}
+            </div>
+            <div className={styles.muted}>{selectedMonth !== null ? `Facturado hasta ${months[selectedMonth]}` : 'Facturación anual'}</div>
+            {selectedMonth !== null && otherData && (
+              <div style={{fontSize:12, color:'#777', marginTop:6}}>
+                <strong>Comparado con {otherYear}:</strong> &nbsp;
+                <span style={{color:'#2f8b58'}}>{pctChange(ytd!.fact, otherData.fact).toFixed(1)}%</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -206,8 +317,9 @@ export default function Economic(){
             const hEst = Math.max(12, Math.round((est / maxMonthly) * maxBarHeight))
             const hFact = Math.max(12, Math.round((fact / maxMonthly) * maxBarHeight))
             return (
-              <div key={i} className={styles.barItem}
+              <div key={i} className={`${styles.barItem} ${selectedMonth===i?styles.selectedMonth:''}`}
                 tabIndex={0}
+                onClick={()=>setSelectedMonth(prev => prev===i?null:i)}
                 onFocus={(e)=>{
                   const target = e.currentTarget as HTMLElement
                   const grid = gridRef.current

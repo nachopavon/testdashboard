@@ -1,7 +1,7 @@
 // economicData.ts - final clean implementation
 const years = [2025, 2026, 2027, 2028]
 
-type Requisite = { code: string; description: string; facturacion: number; estimacion: number }
+type Requisite = { code: string; description: string; facturacion: number; estimacion: number; month?: number }
 
 const templates = [
   'Soporte operativo y resolución de incidencias críticas',
@@ -104,10 +104,22 @@ years.forEach((y) => {
     if (estCentsByReq[i] > 0) { estCentsByReq[i] -= 1; remainingEst += 1 }
   }
 
+  // assign each requisite to a month index (0..11) based on cumulative monthly facturación
+  const monthlyFactCents = monthlyFacturacion.map(m => Math.round(m * 100))
+  const cumMonths: number[] = monthlyFactCents.reduce((acc: number[], v: number) => {
+    const last = acc.length ? acc[acc.length - 1] : 0
+    acc.push(last + v)
+    return acc
+  }, [])
+  let runningAllocated = 0
   for (let i = 0; i < reqCount; i++) {
     const factC = factCentsByReq[i]
     const estC = estCentsByReq[i]
-    requisites.push({ code: `REQ.${String(i + 1).padStart(2, '0')}`, description: `${templates[i % templates.length]} - alcance ${y}`, facturacion: factC / 100, estimacion: estC / 100 })
+    const assignPoint = runningAllocated
+    let monthIdx = cumMonths.findIndex(c => c > assignPoint)
+    if (monthIdx === -1) monthIdx = 11
+    runningAllocated += factC
+    requisites.push({ code: `REQ.${String(i + 1).padStart(2, '0')}`, description: `${templates[i % templates.length]} - alcance ${y}`, facturacion: factC / 100, estimacion: estC / 100, month: monthIdx })
   }
 
   data[yearKey] = { monthlyFacturacion, monthlyEstimacion, facturacion, estimacion, requisites }
