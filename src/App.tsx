@@ -16,9 +16,15 @@ export default function App(){
 
   const metrics = sampleData.data[filters.month][filters.req]
 
+  // counts for sidebar badges
+  const econCount = (()=>{
+    try{ return (require('./data/economicData').default.years.length || 0) * 12 }catch(e){ return 12 }
+  })()
+  const ansCount = metrics.length
+
   return (
     <div className={styles.app}>
-      <Sidebar view={view} onChange={setView} />
+      <Sidebar view={view} onChange={setView} ansCount={ansCount} econCount={econCount} />
       <div className={styles.main}>
         {view === 'ans' ? (
           <>
