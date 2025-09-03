@@ -60,29 +60,54 @@ years.forEach((y) => {
   reqCount = Math.min(reqCount, maxReqPerBigYear)
   if (reqCount < 1) reqCount = 1
 
+  // Generate weighted, non-linear amounts per REQ so values vary but still sum to annual totals
   const requisites: Requisite[] = []
-  const perReqBase = Math.floor(totalFactCents / reqCount)
-  let perReqRem = totalFactCents - perReqBase * reqCount
+  // deterministic weights per index to create variety
+  const weights = Array.from({ length: reqCount }, (_, i) => {
+    // mix index and year to vary weights: results in 1..10
+    return 1 + ((i * 37 + y) % 10)
+  })
+  const weightSum = weights.reduce((s, w) => s + w, 0)
+
+  // allocate facturacion cents proportionally to weights
+  let allocatedFactCents = 0
+  const factCentsByReq: number[] = weights.map((w, i) => {
+    const v = Math.floor((totalFactCents * w) / weightSum)
+    allocatedFactCents += v
+    return v
+  })
+  // distribute remaining cents due to flooring
+  let remainingFact = totalFactCents - allocatedFactCents
+  for (let i = 0; remainingFact > 0; i = (i + 1) % reqCount) {
+    factCentsByReq[i] += 1
+    remainingFact -= 1
+  }
+
+  // build requisites with estimations derived from facturacion base per REQ
+  let allocatedEstCents = 0
+  const estCentsByReq: number[] = []
   for (let i = 0; i < reqCount; i++) {
-    const add = perReqRem > 0 ? 1 : 0
-    if (perReqRem > 0) perReqRem -= 1
-    const factC = perReqBase + add
-    const estC = Math.round(factC * (1 + estRate))
+    const f = factCentsByReq[i]
+    const est = Math.round(f * (1 + estRate))
+    estCentsByReq.push(est)
+    allocatedEstCents += est
+  }
+
+  // adjust est cents to match totalEstCents (distribute diff)
+  let remainingEst = totalEstCents - allocatedEstCents
+  for (let i = 0; remainingEst > 0 && reqCount > 0; i = (i + 1) % reqCount) {
+    estCentsByReq[i] += 1
+    remainingEst -= 1
+  }
+  for (let i = 0; remainingEst < 0 && reqCount > 0; i = (i + 1) % reqCount) {
+    // remove one cent from items > 0 until fixed
+    if (estCentsByReq[i] > 0) { estCentsByReq[i] -= 1; remainingEst += 1 }
+  }
+
+  for (let i = 0; i < reqCount; i++) {
+    const factC = factCentsByReq[i]
+    const estC = estCentsByReq[i]
     requisites.push({ code: `REQ.${String(i + 1).padStart(2, '0')}`, description: `${templates[i % templates.length]} - alcance ${y}`, facturacion: factC / 100, estimacion: estC / 100 })
-  }
-
-  const sumFactCents = requisites.reduce((s, r) => s + Math.round(r.facturacion * 100), 0)
-  const diffFact = totalFactCents - sumFactCents
-  if (diffFact !== 0 && requisites.length > 0) {
-    const last = requisites[requisites.length - 1]
-    last.facturacion = Math.round((last.facturacion * 100 + diffFact)) / 100
-  }
-
-  const sumEstCents = requisites.reduce((s, r) => s + Math.round(r.estimacion * 100), 0)
-  const diffEst = totalEstCents - sumEstCents
-  if (diffEst !== 0 && requisites.length > 0) {
-    const last = requisites[requisites.length - 1]
-    last.estimacion = Math.round((last.estimacion * 100 + diffEst)) / 100
   }
 
   data[yearKey] = { monthlyFacturacion, monthlyEstimacion, facturacion, estimacion, requisites }
