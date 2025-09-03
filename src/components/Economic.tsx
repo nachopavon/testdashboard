@@ -26,6 +26,13 @@ export default function Economic(){
   const otherYear = years.find(y=>y!==year) || years[0]
   const comp = econData.data[otherYear]
 
+  // pagination for requisites
+  const [page, setPage] = useState(1)
+  const perPage = 10
+  const totalReq = d.requisites.length
+  const totalPages = Math.max(1, Math.ceil(totalReq / perPage))
+  const pagedReqs = d.requisites.slice((page-1)*perPage, page*perPage)
+
   // export helpers (CSV / JSON)
   function download(filename:string, content:string, mime='text/plain'){
     const blob = new Blob([content], {type:mime + ';charset=utf-8;'})
@@ -184,11 +191,18 @@ export default function Economic(){
           <caption id="req-desc" style={{display:'none'}}>Lista de requisitos y su facturación/estimación</caption>
           <thead><tr><th>Requisito</th><th>Petición</th><th style={{textAlign:'right'}}>Facturación</th><th style={{textAlign:'right'}}>Estimación</th></tr></thead>
           <tbody>
-            {d.requisites.map((r:any)=> (
+            {pagedReqs.map((r:any)=> (
               <tr key={r.code}><td>{r.code}</td><td>{r.description}</td><td style={{textAlign:'right'}}>{r.facturacion.toLocaleString()} €</td><td style={{textAlign:'right'}}>{r.estimacion.toLocaleString()} €</td></tr>
             ))}
           </tbody>
         </table>
+        <div className={styles.pager} aria-label="Paginación requisitos">
+          <button onClick={()=>setPage(1)} disabled={page===1} className={styles.pagerBtn} aria-label="Primera página">«</button>
+          <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className={styles.pagerBtn} aria-label="Página anterior">‹</button>
+          <span className={styles.pagerInfo}>Página {page} de {totalPages}</span>
+          <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className={styles.pagerBtn} aria-label="Página siguiente">›</button>
+          <button onClick={()=>setPage(totalPages)} disabled={page===totalPages} className={styles.pagerBtn} aria-label="Última página">»</button>
+        </div>
       </div>
     </div>
   )
