@@ -1,0 +1,19 @@
+.root {
+  padding: 12px;
+}
+.tabs {
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+}
+.tab {
+  background:var(--card-bg);
+  border-radius:6px;
+  padding:6px 10px;
+  cursor:pointer;
+  color:var(--muted);
+  font-weight:600;
+}
+.tabActive{ color:var(--text); background:var(--accent); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+.controls { margin-bottom:12px; }

@@ -4,6 +4,7 @@ import HeaderFilters from './components/HeaderFilters'
 import Card from './components/Card'
 import sampleData, { months as dataMonths, reqs as dataReqs } from './data/sampleData'
 import Economic from './components/Economic'
+import AnsDashboard from './components/Ans/AnsDashboard'
 import styles from './App.module.css'
 
 export default function App(){
@@ -29,11 +30,7 @@ export default function App(){
         {view === 'ans' ? (
           <>
             <HeaderFilters months={dataMonths} reqs={dataReqs} month={filters.month} lote={filters.lote} req={filters.req} onChange={setFilters} />
-            <div className={styles.grid}>
-              {metrics.map(item => (
-                <Card key={item.id} item={item as any} />
-              ))}
-            </div>
+            <AnsDashboard />
           </>
         ) : (
           <Economic />
