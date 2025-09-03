@@ -105,8 +105,14 @@ export default function Chat(){
 
   function quickExample(example:string){
     const q = example
-    const a = answerFromData(q) || 'Lo siento, no tengo datos exactos para esa pregunta.'
-    setHistory(h => [{from:'bot', text: a}, {from:'user', text: q}, ...h])
+    // insert user message
+    setHistory(h => [{from:'user', text: q}, ...h])
+    // then insert bot reply after a short delay to simulate processing
+    setTimeout(()=>{
+      const a = answerFromData(q) || 'Lo siento, no tengo datos exactos para esa pregunta.'
+      setHistory(h => [{from:'bot', text: a}, ...h])
+      if(panelRef.current) panelRef.current.scrollTop = 0
+    }, 600)
   }
 
   return (
@@ -135,15 +141,11 @@ export default function Chat(){
                       '¿Cuál es el objetivo de ANS-01 o NIV-01?',
                       'Resumen de requisitos',
                       'Dame un resumen ANS general'
-                    ].map((ex, idx) => {
-                      const ans = answerFromData(ex) || 'Respuesta no disponible'
-                      return (
-                        <div key={idx} className={styles.exampleItem}>
-                          <button onClick={()=>quickExample(ex)} className={styles.exampleBtn}>{ex}</button>
-                          <div className={styles.exampleAnswer}>{ans}</div>
-                        </div>
-                      )
-                    })}
+                    ].map((ex, idx) => (
+                      <div key={idx} className={styles.exampleItem}>
+                        <button onClick={()=>quickExample(ex)} className={styles.exampleBtn}>{ex}</button>
+                      </div>
+                    ))}
                   </div>
             </div>
           ) : (
