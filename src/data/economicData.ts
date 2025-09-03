@@ -145,7 +145,9 @@ years.forEach((y) => {
 
   // assign each requisite to a month index (0..11) based on cumulative monthly facturación
   const monthlyFactCents = adjustedMonthlyFactCents
-  const cumMonths: number[] = monthlyFactCents.reduce((acc: number[], v: number) => {
+  // if some months are zero (e.g., 2025 active months only), give them a small non-zero weight
+  const assignmentWeights = monthlyFactCents.map(v => v > 0 ? v : 1)
+  const cumMonths: number[] = assignmentWeights.reduce((acc: number[], v: number) => {
     const last = acc.length ? acc[acc.length - 1] : 0
     acc.push(last + v)
     return acc
