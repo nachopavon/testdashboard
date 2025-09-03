@@ -68,12 +68,19 @@ export default function Economic(){
           <div className={styles.legendItem}><span className={styles.legendBoxFact}></span> Coste</div>
         </div>
   <div className={styles.monthlyGrid} ref={gridRef}>
-          <div className={styles.verticalAxis}>
-            {Array.from({length:4}).map((_,i)=>{
-              const val = Math.round((maxMonthly/4)*(4-i))
-              return <div key={i} className={styles.axisTick}><span className={styles.axisLabel}>{val.toLocaleString()}</span></div>
-            })}
-          </div>
+            <div className={styles.verticalAxis}>
+              {Array.from({length:4}).map((_,i)=>{
+                const val = Math.round((maxMonthly/4)*(4-i))
+                const label = `${Math.round(val/1000).toLocaleString('es-ES')} mil €`
+                return <div key={i} className={styles.axisTick} style={{top:`${(i/(4-1))*100}%`}}><span className={styles.axisLabel}>{label}</span></div>
+              })}
+            </div>
+            <div className={styles.gridLines}>
+              {Array.from({length:4}).map((_,i)=>{
+                const topPct = (i/(4-1))*100
+                return <div key={i} className={styles.gridLine} style={{top:`${topPct}%`}} />
+              })}
+            </div>
           <div className={styles.barRow}>
           {d.monthlyEstimacion.map((est:number, i:number)=>{
             const fact = d.monthlyFacturacion[i] || 0
