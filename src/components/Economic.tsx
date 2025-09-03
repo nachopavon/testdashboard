@@ -226,14 +226,17 @@ export default function Economic(){
                 <circle className={styles.donutArc} cx="120" cy="90" r={r} stroke={color} strokeWidth="28" fill="none"
                   strokeDasharray={`${dash} ${Math.round(circ)}`} strokeLinecap="round" transform="rotate(-90 120 90)" />
 
-                <text x="120" y="74" fontSize="26" fontWeight="700" textAnchor="middle" fill="var(--accent)">{pctLabel}%</text>
-                <text x="120" y="94" fontSize="11" fill="var(--accent)" textAnchor="middle">facturado</text>
-
-                <text x="120" y="120" fontSize="14" fontWeight="600" textAnchor="middle" className={styles.centerAmount}>
-                  <tspan>
+                {/* group centered at donut center */}
+                <g transform="translate(120 90)">
+                  {/* percentage vertically centered */}
+                  <text x={0} y={0} fontSize="26" fontWeight="700" textAnchor="middle" dominantBaseline="middle" fill="var(--accent)">{pctLabel}%</text>
+                  {/* label directly below percentage */}
+                  <text x={0} y={20} fontSize="11" fill="var(--accent)" textAnchor="middle" dominantBaseline="hanging">facturado</text>
+                  {/* animated amount further below */}
+                  <text x={0} y={40} fontSize="14" fontWeight="600" textAnchor="middle" className={styles.centerAmount} dominantBaseline="middle">
                     <AnimatedNumber value={centerFactValue} format={(n)=> (n).toLocaleString('es-ES') + ' €'} />
-                  </tspan>
-                </text>
+                  </text>
+                </g>
                 <text x="240" y="90" fontSize="14" fontWeight="600">{(selectedMonth !== null && ytd) ? (Math.round((ytd.fact/1000))).toLocaleString() : (Math.round((d.facturacion/1000))).toLocaleString()} mil€</text>
               </svg>
             )
