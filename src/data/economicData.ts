@@ -73,15 +73,42 @@ years.forEach((y, yi) => {
     'Desarrollo de herramientas internas para productividad'
   ]
 
-  const requisites: Requisite[] = Array.from({length:55}, (_,i)=>{
+  let requisites: Requisite[] = Array.from({length:55}, (_,i)=>{
     const code = `REQ.${String(i+1).padStart(2,'0')}`
     const template = templates[i % templates.length]
     const description = `${template} - alcance estimado para el año ${y}`
     const factor = 1000 + (i % 11) * 250 + yi * 4000
-    const facturacion = Math.round(base(i) * (1 + (i % 7) * 0.02) + factor)
-    const estimacion = Math.round(facturacion * (1 + 0.12 + (i % 5) * 0.02))
-    return { code, description, facturacion, estimacion }
+    const factBase = Math.round(base(i) * (1 + (i % 7) * 0.02) + factor)
+    const estBase = Math.round(factBase * (1 + 0.12 + (i % 5) * 0.02))
+    return { code, description, facturacion: factBase, estimacion: estBase }
   })
+
+  // Ajustar las REQ para que sumen exactamente los totales mensuales calculados arriba
+  const sumReqFact = requisites.reduce((s,r)=>s + r.facturacion, 0)
+  const sumReqEst = requisites.reduce((s,r)=>s + r.estimacion, 0)
+
+  // Si las sumas son cero (protección), no escalar
+  if(sumReqFact > 0){
+    const scaleFact = facturacion / sumReqFact
+    requisites = requisites.map(r => ({ ...r, facturacion: Math.round(r.facturacion * scaleFact) }))
+    // corregir diferencia por redondeo en el último elemento
+    const adjFact = requisites.reduce((s,r)=>s + r.facturacion, 0)
+    const diffFact = facturacion - adjFact
+    if(diffFact !== 0){
+      requisites[requisites.length - 1].facturacion += diffFact
+    }
+  }
+
+  if(sumReqEst > 0){
+    const scaleEst = estimacion / sumReqEst
+    requisites = requisites.map(r => ({ ...r, estimacion: Math.round(r.estimacion * scaleEst) }))
+    // corregir diferencia por redondeo en el último elemento
+    const adjEst = requisites.reduce((s,r)=>s + r.estimacion, 0)
+    const diffEst = estimacion - adjEst
+    if(diffEst !== 0){
+      requisites[requisites.length - 1].estimacion += diffEst
+    }
+  }
 
   data[yearKey] = { monthlyFacturacion, monthlyEstimacion, facturacion, estimacion, requisites }
 })
