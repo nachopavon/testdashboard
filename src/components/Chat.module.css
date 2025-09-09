@@ -3,7 +3,7 @@
 .logo{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 .title{font-size:32px;text-align:center;margin:0;font-weight:800;flex:1}
 .chatWrap{display:flex;flex-direction:column;gap:14px;padding:0 24px 24px}
-.historyPanel{background:var(--card-bg);border-radius:16px;padding:24px;min-height:360px;max-height:calc(100vh - 340px);overflow:auto;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.historyPanel{background:#fff;border-radius:16px;padding:24px;min-height:360px;max-height:calc(100vh - 340px);overflow:auto;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
 .welcome{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
 .welcomeTitle{font-size:22px;margin:0}
 .welcomeSub{color:#666;margin:0}

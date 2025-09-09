@@ -14,6 +14,6 @@
   color:var(--muted);
   font-weight:600;
 }
-.tabActive{ color:var(--text); background:var(--accent); }
+.tabActive{ color:var(--card-bg); background:var(--accent); font-weight:700 }
 .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
 .controls { margin-bottom:12px; }

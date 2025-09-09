@@ -1,0 +1,22 @@
+.page{display:flex; gap:18px; align-items:flex-start}
+.leftCol{width:260px}
+.panel{background:var(--card-bg); padding:16px; border-radius:12px; box-shadow:var(--card-shadow)}
+.panelTitle{font-size:16px; margin-bottom:8px; color:var(--accent-2)}
+.sideNav{display:flex; flex-direction:column; gap:8px}
+.navItem{background:transparent; border:none; text-align:left; padding:8px 10px; border-radius:8px; cursor:pointer}
+.searchWrap{margin-top:12px}
+.search{width:100%; padding:10px; border-radius:8px; border:1px solid var(--ui-border)}
+.mainCol{flex:1}
+.headerCards{display:flex; gap:12px; margin-bottom:12px}
+.headerCard{flex:1; background:var(--card-bg); padding:14px; border-radius:10px; text-align:center; box-shadow:var(--card-shadow)}
+.summaryRow{display:flex; gap:12px; margin-bottom:12px}
+.stat{flex:1; background:var(--card-bg); padding:12px; border-radius:8px; text-align:center; box-shadow:var(--card-shadow)}
+.statVal{font-size:20px; font-weight:800; color:var(--accent)}
+.statLabel{color:var(--muted); font-size:12px}
+.listPanel{background:var(--card-bg); padding:14px; border-radius:10px; box-shadow:var(--card-shadow)}
+.listTitle{margin:0 0 12px 0; color:var(--text)}
+.itemList{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px}
+.item{padding:10px; border-radius:8px; border:1px solid var(--ui-border); display:flex; justify-content:space-between; align-items:center}
+.badgeInfo{background:var(--accent-2); color:var(--card-bg); padding:4px 8px; border-radius:999px}
+.badgeWarn{background:#ffd27d; color:#3b2b00; padding:4px 8px; border-radius:999px}
+.badgeOk{background:#c7f2d8; color:#094523; padding:4px 8px; border-radius:999px}
