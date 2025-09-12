@@ -1,19 +1,10 @@
 
-:root{ --green:#184f34; --green-light:#2f8b58; --card-bg:#fff; --muted:#666 }
+.app{display:flex; min-height:100vh; background:var(--bg)}
 
-.app{display:flex; height:100vh; font-family:Inter, Arial, sans-serif}
+.main{flex:1; padding:28px 0; overflow:auto; color:var(--text);}
+.container{max-width:var(--content-width); margin:0 auto; padding:0 20px}
 
-.main{flex:1; padding:24px; background:#f3f5f4; overflow:auto}
-
-.grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px}
-
-/* responsive */
-@media (max-width:1000px){
-  .grid{grid-template-columns:repeat(2, 1fr)}
-}
-@media (max-width:600px){
-  .grid{grid-template-columns:1fr}
-}
+.grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:18px}
 
 /* responsive */
 @media (max-width:1000px){
@@ -22,3 +13,6 @@
 @media (max-width:600px){
   .grid{grid-template-columns:1fr}
 }
+
+/* subtle page header spacing used in Figma */
+.pageHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}

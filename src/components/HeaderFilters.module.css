@@ -1,3 +1,6 @@
-.header{margin-bottom:16px}
+.header{margin-bottom:18px}
 .controls{display:flex; gap:12px}
-.select{padding:8px 12px; border-radius:6px; border:1px solid #ddd; background:#fff}
+.select{padding:10px 14px; border-radius:var(--control-radius); border:1px solid var(--ui-border); background:var(--card-bg); color:var(--text)}
+.filtersWrap{margin-bottom:12px}
+.filtersCard{background:var(--card-bg); border-radius:var(--junta-radius); padding:14px; border:1px solid var(--ui-border); box-shadow:var(--card-shadow)}
+.applyBtn{background:var(--accent); border:none; color:var(--card-bg); padding:8px 12px; border-radius:10px}
