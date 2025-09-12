@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import HeaderFilters from './components/HeaderFilters'
 import Card from './components/Card'
 import sampleData, { months as dataMonths, reqs as dataReqs } from './data/sampleData'
+import { months as allMonths } from './data/serviciosPrestadosData'
 import Economic from './components/Economic'
 import AnsDashboard from './components/Ans/AnsDashboard'
 import Chat from './components/Chat'
@@ -12,7 +13,7 @@ import CargaTrabajo from './components/CargaTrabajo'
 import styles from './App.module.css'
 
 export default function App(){
-  const [filters, setFilters] = useState({ month: dataMonths[3], lote: 'Lote 2', req: dataReqs[0] })
+  const [filters, setFilters] = useState({ month: dataMonths[0], lote: 'Lote 2', req: dataReqs[0] })
   const [view, setView] = useState<'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'>(() => {
     try {
       const v = localStorage.getItem('td_view');

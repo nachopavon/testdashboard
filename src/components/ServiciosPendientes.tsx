@@ -1,8 +1,14 @@
-import React from 'react';
-import { pendingServices, pendingStats } from '../data/serviciosPendientesData';
+import React, { useState } from 'react';
+import { pendingServicesByMonth, pendingStatsByMonth } from '../data/serviciosPendientesData';
+import { months } from '../data/serviciosPrestadosData';
 import styles from './ServiciosPendientes.module.css';
 
+type Filters = { month?: string; lote?: string; req?: string };
+
 export default function ServiciosPendientes() {
+  const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1]);
+  const pendingServices = pendingServicesByMonth[selectedMonth] || [];
+  const pendingStats = pendingStatsByMonth[selectedMonth] || { total: 0, byStatus: {}, byProfile: {}, totalEstimatedHours: 0 };
   const statusColors = {
     'Pendiente': '#f2a800',
     'En Progreso': '#0b5fa5',
@@ -19,7 +25,7 @@ export default function ServiciosPendientes() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Servicios Pendientes</h1>
+        <h1>Servicios Pendientes - {selectedMonth}</h1>
         <div className={styles.summary}>
           <div className={styles.metric}>
             <span className={styles.metricValue}>{pendingStats.total}</span>
@@ -29,6 +35,22 @@ export default function ServiciosPendientes() {
             <span className={styles.metricValue}>{pendingStats.totalEstimatedHours}</span>
             <span className={styles.metricLabel}>Horas Estimadas</span>
           </div>
+        </div>
+      </div>
+
+      <div className={styles.filters}>
+        <div className={styles.filterGroup}>
+          <label htmlFor="month-select">Seleccionar Mes:</label>
+          <select
+            id="month-select"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className={styles.select}
+          >
+            {months.map(month => (
+              <option key={month} value={month}>{month}</option>
+            ))}
+          </select>
         </div>
       </div>
 

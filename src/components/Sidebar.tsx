@@ -33,7 +33,7 @@ export default function Sidebar({
   return (
     <aside className={`${styles.sidebar} ${collapsed?styles.collapsed:''}`} aria-label="Navegación principal">
       <div className={styles.topRow}>
-        <div className={styles.logo} title="Seguimiento del contrato">SEGUIMIENTO CONTRATO</div>
+        <div className={styles.logo} title="Cuadro de Mandos Unificado">Cuadro de Mandos Unificado</div>
         <button className={styles.collapseBtn} aria-label={collapsed? 'Abrir menú':'Cerrar menú'} onClick={()=>setCollapsed(c=>!c)}>{collapsed? '›':'‹'}</button>
       </div>
 

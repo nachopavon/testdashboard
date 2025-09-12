@@ -17,6 +17,32 @@
   margin: 0;
 }
 
+.filters {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterGroup label {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.select {
+  padding: 8px 12px;
+  border-radius: var(--control-radius);
+  border: 1px solid var(--ui-border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
 .summary {
   display: flex;
   gap: 24px;

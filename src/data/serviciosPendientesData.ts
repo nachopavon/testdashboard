@@ -1,5 +1,5 @@
 // Datos sintéticos para Servicios Pendientes
-import { profiles, Profile } from './serviciosPrestadosData';
+import { profiles, Profile, months } from './serviciosPrestadosData';
 
 export interface PendingService {
   id: string;
@@ -14,9 +14,8 @@ export interface PendingService {
   lastUpdate: string;
 }
 
-export const pendingServices: PendingService[] = [
+const baseServices: Omit<PendingService, 'id'>[] = [
   {
-    id: 'P001',
     title: 'Implementación de módulo de autenticación',
     status: 'En Progreso',
     category: 'Desarrollo',
@@ -28,7 +27,6 @@ export const pendingServices: PendingService[] = [
     lastUpdate: '2024-09-10'
   },
   {
-    id: 'P002',
     title: 'Análisis de requisitos para nuevo portal',
     status: 'Pendiente',
     category: 'Análisis',
@@ -40,7 +38,6 @@ export const pendingServices: PendingService[] = [
     lastUpdate: '2024-09-05'
   },
   {
-    id: 'P003',
     title: 'Arquitectura de base de datos',
     status: 'Bloqueado',
     category: 'Arquitectura',
@@ -52,7 +49,6 @@ export const pendingServices: PendingService[] = [
     lastUpdate: '2024-08-30'
   },
   {
-    id: 'P004',
     title: 'Gestión de proyecto de migración',
     status: 'En Progreso',
     category: 'Gestión',
@@ -64,7 +60,6 @@ export const pendingServices: PendingService[] = [
     lastUpdate: '2024-09-08'
   },
   {
-    id: 'P005',
     title: 'Consultoría digital para UX',
     status: 'Revisión',
     category: 'Consultoría',
@@ -76,7 +71,6 @@ export const pendingServices: PendingService[] = [
     lastUpdate: '2024-09-12'
   },
   {
-    id: 'P006',
     title: 'Análisis de sistemas legacy',
     status: 'Pendiente',
     category: 'Análisis',
@@ -89,18 +83,44 @@ export const pendingServices: PendingService[] = [
   }
 ];
 
-// Estadísticas agregadas
-export const pendingStats = {
-  total: pendingServices.length,
-  byStatus: {
-    Pendiente: pendingServices.filter(s => s.status === 'Pendiente').length,
-    'En Progreso': pendingServices.filter(s => s.status === 'En Progreso').length,
-    Bloqueado: pendingServices.filter(s => s.status === 'Bloqueado').length,
-    Revisión: pendingServices.filter(s => s.status === 'Revisión').length
-  },
-  byProfile: profiles.reduce((acc, profile) => {
-    acc[profile] = pendingServices.filter(s => s.assignedProfile === profile).length;
-    return acc;
-  }, {} as Record<Profile, number>),
-  totalEstimatedHours: pendingServices.reduce((sum, s) => sum + s.estimatedHours, 0)
-};
+export const pendingServicesByMonth: Record<string, PendingService[]> = months.reduce((acc, month, idx) => {
+  const numServices = Math.max(3, Math.floor(6 + Math.sin(idx * 0.5) * 2 + Math.random() * 2));
+  const services: PendingService[] = [];
+  for (let i = 0; i < numServices; i++) {
+    const base = baseServices[i % baseServices.length];
+    services.push({
+      ...base,
+      id: `${month.replace(/\s+/g, '').substring(0, 6)}-${String(i + 1).padStart(2, '0')}`,
+      estimatedHours: Math.floor(base.estimatedHours * (0.8 + Math.random() * 0.4)),
+      status: ['Pendiente', 'En Progreso', 'Bloqueado', 'Revisión'][Math.floor(Math.random() * 4)] as any,
+      priority: ['Alta', 'Media', 'Baja'][Math.floor(Math.random() * 3)] as any
+    });
+  }
+  acc[month] = services;
+  return acc;
+}, {} as Record<string, PendingService[]>);
+
+// Estadísticas agregadas por mes
+export const pendingStatsByMonth = months.reduce((acc, month) => {
+  const services = pendingServicesByMonth[month];
+  acc[month] = {
+    total: services.length,
+    byStatus: {
+      Pendiente: services.filter(s => s.status === 'Pendiente').length,
+      'En Progreso': services.filter(s => s.status === 'En Progreso').length,
+      Bloqueado: services.filter(s => s.status === 'Bloqueado').length,
+      Revisión: services.filter(s => s.status === 'Revisión').length
+    },
+    byProfile: profiles.reduce((pAcc, profile) => {
+      pAcc[profile] = services.filter(s => s.assignedProfile === profile).length;
+      return pAcc;
+    }, {} as Record<Profile, number>),
+    totalEstimatedHours: services.reduce((sum, s) => sum + s.estimatedHours, 0)
+  };
+  return acc;
+}, {} as Record<string, {
+  total: number;
+  byStatus: Record<string, number>;
+  byProfile: Record<Profile, number>;
+  totalEstimatedHours: number;
+}>);

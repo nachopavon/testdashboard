@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { workloadData, profileWorkload } from '../data/cargaTrabajoData';
+import { months } from '../data/serviciosPrestadosData';
 import styles from './CargaTrabajo.module.css';
 
+type Filters = { month?: string; lote?: string; req?: string };
+
 export default function CargaTrabajo() {
-  const totalHours = workloadData.reduce((sum, item) => sum + item.totalHours, 0);
+  const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1]);
+  const selectedData = workloadData.find(item => item.month === selectedMonth) || workloadData[workloadData.length - 1];
+
+  const totalHours = selectedData.totalHours;
   const avgUtilization = Math.round(
-    profileWorkload.reduce((sum, p) => sum + p.avgUtilization, 0) / profileWorkload.length
+    Object.values(selectedData.utilization).reduce((sum, u) => sum + u, 0) / Object.values(selectedData.utilization).length
   );
 
   const getUtilizationColor = (utilization: number) => {
@@ -18,7 +24,7 @@ export default function CargaTrabajo() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Carga de Trabajo</h1>
+        <h1>Carga de Trabajo - {selectedMonth}</h1>
         <div className={styles.summary}>
           <div className={styles.metric}>
             <span className={styles.metricValue}>{totalHours}</span>
@@ -31,98 +37,50 @@ export default function CargaTrabajo() {
         </div>
       </div>
 
-      <div className={styles.profilesGrid}>
-        {profileWorkload.map(profile => (
-          <div key={profile.profile} className={styles.profileCard}>
-            <div className={styles.profileHeader}>
-              <h3>{profile.profile}</h3>
-              <div className={styles.utilizationBadge}
-                   style={{ backgroundColor: getUtilizationColor(profile.avgUtilization) }}>
-                {profile.avgUtilization}%
-              </div>
-            </div>
-
-            <div className={styles.profileStats}>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>{profile.totalHours}</span>
-                <span className={styles.statLabel}>Horas Totales</span>
-              </div>
-            </div>
-
-            <div className={styles.chart}>
-              <svg width="100%" height="120" viewBox="0 0 300 120">
-                <polyline
-                  fill="none"
-                  stroke="var(--accent)"
-                  strokeWidth="2"
-                  points={profile.data.map((item, i) =>
-                    `${i * 15 + 20},${120 - (item.hours / 200) * 80}`
-                  ).join(' ')}
-                />
-                {profile.data.map((item, i) => (
-                  <circle
-                    key={i}
-                    cx={i * 15 + 20}
-                    cy={120 - (item.hours / 200) * 80}
-                    r="3"
-                    fill="var(--accent)"
-                    opacity="0.7"
-                  />
-                ))}
-              </svg>
-            </div>
-
-            <div className={styles.monthlyData}>
-              {profile.data.slice(-6).map((item, i) => (
-                <div key={i} className={styles.monthItem}>
-                  <span className={styles.monthLabel}>
-                    {item.month.split('-')[1]}/{item.month.split('-')[0].slice(-2)}
-                  </span>
-                  <div className={styles.monthBar}>
-                    <div
-                      className={styles.monthFill}
-                      style={{
-                        width: `${Math.min((item.hours / 200) * 100, 100)}%`,
-                        backgroundColor: getUtilizationColor(item.utilization)
-                      }}
-                    ></div>
-                  </div>
-                  <span className={styles.monthValue}>{item.hours}h</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      <div className={styles.filters}>
+        <div className={styles.filterGroup}>
+          <label htmlFor="month-select">Seleccionar Mes:</label>
+          <select
+            id="month-select"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className={styles.select}
+          >
+            {months.map(month => (
+              <option key={month} value={month}>{month}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className={styles.overallChart}>
-        <h2>Evolución General de la Carga de Trabajo</h2>
-        <div className={styles.chartContainer}>
-          <svg width="100%" height="300" viewBox="0 0 800 300">
-            {profileWorkload.map((profile, profileIndex) => (
-              <polyline
-                key={profile.profile}
-                fill="none"
-                stroke={`hsl(${profileIndex * 60}, 70%, 50%)`}
-                strokeWidth="2"
-                points={profile.data.map((item, i) =>
-                  `${i * 40 + 50},${300 - (item.hours / 200) * 250}`
-                ).join(' ')}
-              />
-            ))}
-          </svg>
-        </div>
-        <div className={styles.legend}>
-          {profileWorkload.map((profile, i) => (
-            <div key={profile.profile} className={styles.legendItem}>
-              <div
-                className={styles.legendColor}
-                style={{ backgroundColor: `hsl(${i * 60}, 70%, 50%)` }}
-              ></div>
-              <span>{profile.profile}</span>
+      <div className={styles.profilesGrid}>
+        {profileWorkload.map(profile => {
+          const profileData = profile.data.find(item => item.month === selectedMonth) || profile.data[profile.data.length - 1];
+          return (
+            <div key={profile.profile} className={styles.profileCard}>
+              <div className={styles.profileHeader}>
+                <h3>{profile.profile}</h3>
+                <div className={styles.utilizationBadge}
+                     style={{ backgroundColor: getUtilizationColor(profileData.utilization) }}>
+                  {profileData.utilization}%
+                </div>
+              </div>
+
+              <div className={styles.profileStats}>
+                <div className={styles.stat}>
+                  <span className={styles.statValue}>{profileData.hours}</span>
+                  <span className={styles.statLabel}>Horas</span>
+                </div>
+              </div>
+
+              <div className={styles.chart}>
+                <svg width="100%" height="60" viewBox="0 0 100 60">
+                  <rect x="20" y={60 - (profileData.hours / 200) * 50} width="60" height={(profileData.hours / 200) * 50} fill="var(--accent)" />
+                </svg>
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
