@@ -502,8 +502,6 @@ function enhanceResponse(question:string, shortAnswer:string){
   // Servicios prestados: añadir contexto y sugerencias
   if(lower.includes('servicios')){
     const latest = servicesEvolution[servicesEvolution.length - 1]
-    const evoVals = servicesEvolution.map(m=>m.servicesCount)
-    visual = sparkline(evoVals)
     
     // Add SVG chart for evolution
     const chartData = servicesEvolution.map(m => ({month: m.month, value: m.servicesCount}))
@@ -544,7 +542,7 @@ function enhanceResponse(question:string, shortAnswer:string){
     const latest = workloadData[workloadData.length-1]
     const avg = Math.round(Object.values(latest.utilization).reduce((s,n)=>s+n,0)/Object.values(latest.utilization).length)
     const over = Object.entries(latest.utilization).filter(([,v])=>v > avg+10).map(([p])=>p)
-    const bars = Object.entries(latest.utilization).map(([p,v])=>`${p.padEnd(3)} ${bar(v,100)} ${v}%`).join('\n')
+  const bars = Object.entries(latest.utilization).map(([p,v])=>`${p}: ${v}%`).join(', ')
     
     // Add SVG chart for utilization evolution
     const chartData = workloadData.map(w => ({month: w.month, value: Math.round(Object.values(w.utilization).reduce((s,n)=>s+n,0)/Object.values(w.utilization).length)}))
@@ -594,20 +592,7 @@ function enhanceResponse(question:string, shortAnswer:string){
 }
 
 // Small ASCII/symbol helpers
-function sparkline(values:number[]){
-  if(!values || values.length===0) return ''
-  const blocks = ['▁','▂','▃','▄','▅','▆','▇','█']
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
-  return values.map(v => blocks[Math.floor((v - min) / range * (blocks.length - 1))]).join('')
-}
-
-function bar(value:number, max:number){
-  const total = 8
-  const filled = Math.round((value / (max || value || 1)) * total)
-  return '█'.repeat(filled) + '░'.repeat(Math.max(0, total - filled))
-}
+// Note: ASCII sparkline/bar helpers removed — chat responses now prefer SVG and HTML tables for visuals.
 
 // Generate simple SVG line chart for evolution
 function generateEvolutionChart(data: {month: string, value: number}[], title: string, width = 300, height = 100){
@@ -918,26 +903,31 @@ export default function Chat(){
             history.map((h, i) => (
               <div key={i} className={h.from === 'user' ? styles.msgRowUser : styles.msgRowBot}>
                 <div className={h.from === 'user' ? styles.msgUser : styles.msgBot}>
-                  {typeof h.text === 'string' ? (
-                    // If the text contains an SVG tag, render it as HTML so the graphic displays
-                    h.text.includes('<svg') ? (
-                      <div dangerouslySetInnerHTML={{ __html: h.text }} />
-                    ) : // If the text contains multiple lines or '|' separators, render a more structured block
-                    (h.text.includes('\n') || h.text.includes('|')) ? (
-                      // If '|' separators are present and look like key|value pairs, split into inline items
-                      (h.text.includes('|') && !h.text.includes('\n')) ? (
-                        <div className={styles.inlineTable}>
-                          {h.text.split('|').map((part, idx) => (
-                            <div key={idx} className={styles.inlineTableItem}>{part.trim()}</div>
-                          ))}
-                        </div>
-                      ) : (
-                        <pre className={styles.pre}>{h.text}</pre>
-                      )
-                    ) : (
-                      h.text
+                  {typeof h.text === 'string' ? (()=>{
+                    const parts = h.text.split('\n\n')
+                    const main = parts[0]
+                    const visual = parts.slice(1).join('\n\n')
+                    return (
+                      <>
+                        <div>{main}</div>
+                        {visual ? (
+                          <div className={styles.responseVisual}>
+                            {visual.includes('<svg') || visual.includes('<table') ? (
+                              <div dangerouslySetInnerHTML={{ __html: visual }} />
+                            ) : (visual.includes('|') && !visual.includes('\n')) ? (
+                              <div className={styles.inlineTable}>
+                                {visual.split('|').map((part, idx) => (
+                                  <div key={idx} className={styles.inlineTableItem}>{part.trim()}</div>
+                                ))}
+                              </div>
+                            ) : (
+                              <pre className={styles.pre}>{visual}</pre>
+                            )}
+                          </div>
+                        ) : null}
+                      </>
                     )
-                  ) : null}
+                  })() : null}
                 </div>
               </div>
             ))

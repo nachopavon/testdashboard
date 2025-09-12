@@ -59,6 +59,22 @@
   text-align: center;
 }
 
+/* Match ServiciosPrestados: center the chart and limit to 80% width */
+.evolutionChart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.evolutionChart > svg,
+.evolutionChart > div.svgWrapper,
+.evolutionChart > div {
+  width: 80%;
+  max-width: 100%;
+  margin: 12px auto 0 auto;
+  display: block;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
