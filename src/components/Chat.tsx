@@ -14,8 +14,257 @@ function findYearInText(text:string){
   return null
 }
 
+// helper: normalize text (remove diacritics, punctuation, extra spaces)
+function normalizeText(t:string){
+  try{
+    return t
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[¿?¡!.,:\/\\\-()]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }catch(e){
+    return t.toLowerCase().replace(/[¿?¡!.,:\/\\\-()]/g,' ').replace(/\s+/g,' ').trim()
+  }
+}
+
   function answerFromData(q:string){
   const s = q.toLowerCase()
+  const exactKey = s.trim()
+  
+
+  // Exact mappings for the card texts (lowercased)
+  const exactMap: Record<string, ()=>string> = {
+    '¿cuántos servicios hay este mes?': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      return `En ${latestMonth.month}: ${latestMonth.servicesCount} servicios.`
+    },
+    '¿cuántas horas totales?': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      return `En ${latestMonth.month}: ${latestMonth.totalHours} horas totales de servicios prestados.`
+    },
+    'perfil gp - servicios': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).GP
+      return `Perfil GP en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
+    },
+    'perfil an - servicios': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).AN
+      return `Perfil AN en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
+    },
+    'perfil as - servicios': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).AS
+      return `Perfil AS en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
+    },
+    'perfil ars - servicios': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).ARS
+      return `Perfil ARS en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
+    },
+    'perfil de - servicios': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).DE
+      return `Perfil DE en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
+    },
+    'perfil cd - servicios': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).CD
+      return `Perfil CD en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
+    },
+    'perfil gp - horas': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).GP
+      return `Perfil GP en ${latestMonth.month}: ${d.hours} horas.`
+    },
+    'perfil de - horas': () => {
+      const latestMonth = servicesEvolution[servicesEvolution.length - 1]
+      const d = (latestMonth.byProfile as any).DE
+      return `Perfil DE en ${latestMonth.month}: ${d.hours} horas.`
+    },
+
+    // Pendientes
+    '¿cuántos pendientes hay?': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { total: 0 }
+      return `En ${latest}: ${stats.total} servicios pendientes.`
+    },
+    'por estado': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
+      const statusSummary = Object.entries((stats as any).byStatus).map(([k,v])=>`${k}: ${v}`).join(', ')
+      return `Estado de servicios pendientes en ${latest}: ${statusSummary}.`
+    },
+    'perfil gp - pendientes': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
+      return `Perfil GP en ${latest}: ${((stats as any).byProfile.GP || 0)} servicios pendientes.`
+    },
+    'perfil an - pendientes': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
+      return `Perfil AN en ${latest}: ${((stats as any).byProfile.AN || 0)} servicios pendientes.`
+    },
+    'perfil as - pendientes': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
+      return `Perfil AS en ${latest}: ${((stats as any).byProfile.AS || 0)} servicios pendientes.`
+    },
+    'perfil de - pendientes': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
+      return `Perfil DE en ${latest}: ${((stats as any).byProfile.DE || 0)} servicios pendientes.`
+    },
+    'horas estimadas totales': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { totalEstimatedHours: 0 }
+      return `Horas estimadas totales en ${latest}: ${stats.totalEstimatedHours} horas.`
+    },
+    'en progreso': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
+      return `En progreso en ${latest}: ${((stats as any).byStatus['En Progreso'] || 0)} servicios.`
+    },
+    'bloqueados': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
+      return `Bloqueados en ${latest}: ${((stats as any).byStatus['Bloqueado'] || 0)} servicios.`
+    },
+    'en revisión': () => {
+      const latest = Object.keys(pendingServicesByMonth).pop() || ''
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
+      return `En revisión en ${latest}: ${((stats as any).byStatus['Revisión'] || 0)} servicios.`
+    },
+
+    // Carga de trabajo
+    '¿cuál es la carga total?': () => {
+      const latestData = workloadData[workloadData.length - 1]
+      return `Carga total en ${latestData.month}: ${latestData.totalHours} horas (suma estimada).`
+    },
+    'utilización promedio': () => {
+      const latestData = workloadData[workloadData.length - 1]
+      const avg = Math.round(Object.values(latestData.utilization).reduce((s,n)=>s+n,0) / Object.values(latestData.utilization).length)
+      return `Utilización promedio en ${latestData.month}: ${avg}%.`
+    },
+    'perfil gp - utilización': () => {
+      const p = profileWorkload.find(p=>p.profile==='GP')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `GP en ${d.month}: ${d.utilization}% de utilización, ${d.hours} horas.` : 'No hay datos GP.'
+    },
+    'perfil an - utilización': () => {
+      const p = profileWorkload.find(p=>p.profile==='AN')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `AN en ${d.month}: ${d.utilization}% de utilización, ${d.hours} horas.` : 'No hay datos AN.'
+    },
+    'perfil as - utilización': () => {
+      const p = profileWorkload.find(p=>p.profile==='AS')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `AS en ${d.month}: ${d.utilization}% de utilización, ${d.hours} horas.` : 'No hay datos AS.'
+    },
+    'perfil ars - utilización': () => {
+      const p = profileWorkload.find(p=>p.profile==='ARS')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `ARS en ${d.month}: ${d.utilization}% de utilización, ${d.hours} horas.` : 'No hay datos ARS.'
+    },
+    'perfil de - utilización': () => {
+      const p = profileWorkload.find(p=>p.profile==='DE')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `DE en ${d.month}: ${d.utilization}% de utilización, ${d.hours} horas.` : 'No hay datos DE.'
+    },
+    'perfil cd - utilización': () => {
+      const p = profileWorkload.find(p=>p.profile==='CD')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `CD en ${d.month}: ${d.utilization}% de utilización, ${d.hours} horas.` : 'No hay datos CD.'
+    },
+    'horas perfil de': () => {
+      const p = profileWorkload.find(p=>p.profile==='DE')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `DE en ${d.month}: ${d.hours} horas.` : 'No hay datos DE.'
+    },
+    'horas perfil gp': () => {
+      const p = profileWorkload.find(p=>p.profile==='GP')
+      const d = p ? p.data[p.data.length-1] : null
+      return d ? `GP en ${d.month}: ${d.hours} horas.` : 'No hay datos GP.'
+    },
+
+    // Facturación & ANS
+    'facturación 2026': () => {
+      const y = 2026
+      const entry = (econData as any).data[String(y)]
+      if(!entry) return `No hay datos de facturación para ${y}.`
+      return `Aproximadamente ${Math.round(entry.facturacion).toLocaleString('es-ES')}€ de facturación en ${y}.`
+    },
+    'facturación 2027': () => {
+      const y = 2027
+      const entry = (econData as any).data[String(y)]
+      if(!entry) return `No hay datos de facturación para ${y}.`
+      return `Aproximadamente ${Math.round(entry.facturacion).toLocaleString('es-ES')}€ de facturación en ${y}.`
+    },
+    'indicadores niv': () => {
+      return `Indicadores NIV: ${((ansData as any).niv || []).length} indicadores disponibles.`
+    },
+    'indicadores dis': () => {
+      return `Indicadores DIS: ${((ansData as any).dis || []).length} indicadores disponibles.`
+    },
+    'indicadores ons': () => {
+      return `Indicadores ONS: ${((ansData as any).ons || []).length} indicadores disponibles.`
+    },
+    'indicadores seg': () => {
+      return `Indicadores SEG: ${((ansData as any).seg || []).length} indicadores disponibles.`
+    },
+    'indicadores cmu': () => {
+      return `Indicadores CMU: ${((ansData as any).cmu || []).length} indicadores disponibles.`
+    },
+    'resumen ans': () => {
+      const months = ansData.months
+      const latest = months[months.length-1]
+      return `Resumen ANS (mes ${latest}): consulta rápida generada.`
+    },
+    'requisitos 2026': () => {
+      const y = 2026; const entry = (econData as any).data[String(y)]
+      const count = entry && Array.isArray(entry.requisites) ? entry.requisites.length : 0
+      return `Aproximadamente ${count} requisitos en ${y}.`
+    },
+    'requisitos 2027': () => {
+      const y = 2027; const entry = (econData as any).data[String(y)]
+      const count = entry && Array.isArray(entry.requisites) ? entry.requisites.length : 0
+      return `Aproximadamente ${count} requisitos en ${y}.`
+    },
+    'mes pico facturación': () => {
+      const years = (econData as any).years || []
+      const y = years[0] || 2026
+      const entry = (econData as any).data[String(y)]
+      if(!entry) return 'No hay datos de facturación.'
+      const months = entry.monthlyFacturacion || []
+      let peakIdx = 0; for(let i=0;i<months.length;i++) if((months[i]||0) > (months[peakIdx]||0)) peakIdx = i
+      const monthLabel = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][peakIdx]
+      return `Mes pico de facturación en ${y}: ${monthLabel}.`
+    },
+    'top indicadores niv': () => {
+      // reuse ANS top logic
+      const list = (ansData as any).niv || []
+      if(list.length===0) return 'No hay indicadores NIV.'
+      const latest = ansData.months[ansData.months.length-1]
+      const vals = list.map((it:any)=>{ const v=(it.monthly||{})[latest]||0; const t=it.target||0; return t>0? v/t:1 })
+      const indicators = list.map((it:any, idx:number)=>({ name: it.name || `Indicador ${idx+1}`, compliance: vals[idx]*100 })).sort((a:any,b:any)=>b.compliance-a.compliance).slice(0,3)
+      return `Top NIV: ${indicators.map((i:any)=>`${i.name}: ${i.compliance.toFixed(1)}%`).join(', ')}.`
+    }
+  }
+
+  // try exact match first
+  if(exactMap[exactKey]){
+    try{ return exactMap[exactKey]() }catch(e){ /* fallthrough to fuzzy matching */ }
+  }
+
+  // try normalized exact match (robust against punctuation/accents)
+  const normalizedExactMap: Record<string, ()=>string> = {}
+  Object.keys(exactMap).forEach(k=>{ normalizedExactMap[normalizeText(k)] = exactMap[k] })
+  const nk = normalizeText(q)
+  if(normalizedExactMap[nk]){
+    try{ return normalizedExactMap[nk]() }catch(e){}
+  }
   // economic queries
   if(s.includes('factur') || s.includes('estim') || s.includes('coste')){
     const y = findYearInText(s) || (econData.years[0])
@@ -234,6 +483,36 @@ function findYearInText(text:string){
   return ''
 }
 
+// Produce a slightly more elaborate IA-like response combining the brief data answer
+function enhanceResponse(question:string, shortAnswer:string){
+  const q = question.trim()
+  if(!shortAnswer || shortAnswer.trim() === '') return 'Lo siento, no tengo información precisa para responder eso en este momento.'
+
+  // Simple heuristics to expand responses
+  if(shortAnswer.toLowerCase().includes('servicios')){
+    return `${shortAnswer} Si necesitas, puedo desglosar por perfil, ver la evolución por meses o comparar con meses anteriores. ¿Quieres que muestre alguna de esas vistas?`
+  }
+
+  if(shortAnswer.toLowerCase().includes('horas')){
+    return `${shortAnswer} Esta cifra es una agregación estimada basada en los registros del mes. Puedo desglosarla por perfil o por tipo de servicio si lo prefieres.`
+  }
+
+  if(shortAnswer.toLowerCase().includes('pendientes') || shortAnswer.toLowerCase().includes('bloquead') || shortAnswer.toLowerCase().includes('en revisión')){
+    return `${shortAnswer} Puedo proporcionar una lista más detallada de los elementos pendientes o filtrar por estado o perfil para priorizar acciones.`
+  }
+
+  if(shortAnswer.toLowerCase().includes('utilización') || shortAnswer.toLowerCase().includes('carga')){
+    return `${shortAnswer} La utilización indica cuánto de la capacidad disponible se está empleando; si quieres puedo mostrar proyecciones o identificar perfiles con sobrecarga.`
+  }
+
+  if(shortAnswer.toLowerCase().includes('facturación') || shortAnswer.toLowerCase().includes('estimación')){
+    return `${shortAnswer} Puedo también mostrar la evolución mensual o comparar contra la estimación anual si te interesa.`
+  }
+
+  // Fallback: add a short clarifying sentence
+  return `${shortAnswer} Si quieres más detalle, pregunta por desglose por perfil, por mes o por estado.`
+}
+
 export default function Chat(){
   const [input, setInput] = useState('')
   const [history, setHistory] = useState<Hist[]>(()=>{
@@ -268,6 +547,17 @@ export default function Chat(){
     try{ localStorage.setItem('td_chat_history', JSON.stringify(history)) }catch(e){}
   },[history])
 
+  // show welcome cards if sidebar requested it
+  useEffect(()=>{
+    try{
+      const flag = sessionStorage.getItem('td_show_chat_welcome')
+      if(flag === '1'){
+        setHistory([])
+        sessionStorage.removeItem('td_show_chat_welcome')
+      }
+    }catch(e){}
+  }, [])
+
   function send(){
     if(!input.trim()) return
     const q = input.trim()
@@ -275,9 +565,10 @@ export default function Chat(){
     setInput('')
     setLoading(true)
     setTimeout(()=>{
-      const dataAnswer = answerFromData(q)
-      const a = dataAnswer || 'Lo siento, no encuentro datos precisos para esa consulta.'
-      setHistory(h => [{from:'bot', text: a}, ...h])
+  const dataAnswer = answerFromData(q)
+  let a = dataAnswer || 'Lo siento, no encuentro datos precisos para esa consulta.'
+  try{ a = enhanceResponse(q, a) }catch(e){}
+  setHistory(h => [{from:'bot', text: a}, ...h])
       setLoading(false)
       if(panelRef.current) panelRef.current.scrollTop = 0
     }, 600)
@@ -296,7 +587,23 @@ export default function Chat(){
     
     // then insert bot reply after a short delay to simulate processing
     setTimeout(()=>{
-      const a = answerFromData(q) || 'Lo siento, no tengo datos exactos para esa pregunta.'
+      // Try multiple variants to maximize chance of matching the map
+      const variants: string[] = []
+      variants.push(q)
+      variants.push(q.toLowerCase())
+      // strip punctuation
+      variants.push(q.replace(/[¿?¡!.,:;\-()\/\\]/g,' '))
+      // remove accents (simple replacements)
+      const deAccent = (s:string)=>s.replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
+      variants.push(deAccent(q))
+      variants.push(deAccent(q.toLowerCase()).replace(/\s+/g,' ').trim())
+
+      let a: string | null = null
+      for(const v of variants){
+        const tryA = answerFromData(v)
+        if(tryA && tryA.trim() !== ''){ a = tryA; break }
+      }
+      if(!a) a = 'Lo siento, no tengo datos exactos para esa pregunta.'
       setHistory(h => [{from:'bot', text: a}, ...h])
       setLoading(false)
       if(panelRef.current) panelRef.current.scrollTop = 0
