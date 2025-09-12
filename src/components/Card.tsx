@@ -41,7 +41,7 @@ export default function Card({item, index}:{item:Item, index?:number}){
             onMouseEnter={showTip}
             onMouseLeave={()=>setTooltipVisible(false)}
             aria-describedby={`tip-${item.id}`}>
-            <Gauge value={item.value} target={item.target} unit={item.unit} />
+            <Gauge value={item.value} target={item.target} />
           </div>
           {tooltipVisible && (
             <div id={`tip-${item.id}`} role="status" aria-live="polite" className={styles.cardTooltip} style={{left:tooltipPos.x, top:tooltipPos.y}}>

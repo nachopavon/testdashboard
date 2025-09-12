@@ -1,10 +1,97 @@
 import React, { useState } from 'react';
-import { servicesEvolution, hoursByProfile, profiles, Profile, months } from '../data/serviciosPrestadosData';
+import { servicesEvolution, months, profiles, Profile } from '../data/serviciosPrestadosData';
 import styles from './ServiciosPrestados.module.css';
 
 type TabType = 'evolucion' | 'horas-perfil';
 
-type Filters = { month?: string; lote?: string; req?: string };
+// Generate SVG evolution chart
+function generateEvolutionChart(data: {month: string, servicesCount: number, totalHours: number}[], width = 600, height = 300) {
+  if (!data || data.length === 0) return null;
+
+  const servicesValues = data.map(d => d.servicesCount);
+  const hoursValues = data.map(d => d.totalHours);
+  
+  const servicesMin = Math.min(...servicesValues);
+  const servicesMax = Math.max(...servicesValues);
+  const hoursMin = Math.min(...hoursValues);
+  const hoursMax = Math.max(...hoursValues);
+  
+  const servicesRange = servicesMax - servicesMin || 1;
+  const hoursRange = hoursMax - hoursMin || 1;
+
+  const servicesPoints = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * (width - 80) + 40;
+    const y = height - 60 - ((d.servicesCount - servicesMin) / servicesRange) * (height - 120);
+    return `${x},${y}`;
+  }).join(' ');
+
+  const hoursPoints = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * (width - 80) + 40;
+    const y = height - 60 - ((d.totalHours - hoursMin) / hoursRange) * (height - 120);
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      {/* Grid lines */}
+      <defs>
+        <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" strokeWidth="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+      
+      {/* Y-axis labels */}
+      <text x="10" y="30" fontSize="12" fill="#666">Servicios</text>
+      <text x="10" y={height - 30} fontSize="12" fill="#666">Horas</text>
+      
+      {/* Services line */}
+      <polyline 
+        fill="none" 
+        stroke="#007acc" 
+        strokeWidth="3" 
+        points={servicesPoints} 
+      />
+      {data.map((d, i) => {
+        const x = (i / (data.length - 1)) * (width - 80) + 40;
+        const y = height - 60 - ((d.servicesCount - servicesMin) / servicesRange) * (height - 120);
+        return <circle key={`services-${i}`} cx={x} cy={y} r="4" fill="#007acc" />
+      })}
+      
+      {/* Hours line */}
+      <polyline 
+        fill="none" 
+        stroke="#28a745" 
+        strokeWidth="3" 
+        points={hoursPoints} 
+      />
+      {data.map((d, i) => {
+        const x = (i / (data.length - 1)) * (width - 80) + 40;
+        const y = height - 60 - ((d.totalHours - hoursMin) / hoursRange) * (height - 120);
+        return <circle key={`hours-${i}`} cx={x} cy={y} r="4" fill="#28a745" />
+      })}
+      
+      {/* X-axis labels */}
+      {data.map((d, i) => {
+        if (i % Math.ceil(data.length / 6) === 0 || i === data.length - 1) {
+          const x = (i / (data.length - 1)) * (width - 80) + 40;
+          return (
+            <text key={`label-${i}`} x={x} y={height - 10} fontSize="10" fill="#666" textAnchor="middle">
+              {d.month}
+            </text>
+          );
+        }
+        return null;
+      })}
+      
+      {/* Legend */}
+      <rect x={width - 120} y="20" width="15" height="3" fill="#007acc" />
+      <text x={width - 100} y="25" fontSize="12" fill="#666">Servicios</text>
+      <rect x={width - 120} y="35" width="15" height="3" fill="#28a745" />
+      <text x={width - 100} y="40" fontSize="12" fill="#666">Horas</text>
+    </svg>
+  );
+}
 
 export default function ServiciosPrestados() {
   const [activeTab, setActiveTab] = useState<TabType>('evolucion');
@@ -68,7 +155,12 @@ export default function ServiciosPrestados() {
           <div className={styles.chartContainer}>
             <h2>Evolución del Número de Servicios Prestados - {new Date(selectedMonth + '-01').toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</h2>
             <div className={styles.chart}>
-              <div className={styles.placeholder}>
+              <div className={styles.evolutionChart}>
+                <h3>Evolución Completa del Contrato</h3>
+                {generateEvolutionChart(servicesEvolution)}
+              </div>
+              <div className={styles.currentMonthData}>
+                <h3>Datos del Mes Seleccionado</h3>
                 <div className={styles.monthData}>
                   <div className={styles.dataPoint}>
                     <span className={styles.dataLabel}>Servicios:</span>
@@ -79,11 +171,11 @@ export default function ServiciosPrestados() {
                     <span className={styles.dataValue}>{selectedData.totalHours}</span>
                   </div>
                 </div>
-                <svg width="100%" height="200" viewBox="0 0 400 200">
-                  <rect x="50" y={200 - (selectedData.servicesCount / 100) * 150} width="100" height={(selectedData.servicesCount / 100) * 150} fill="var(--accent)" />
-                  <text x="100" y={180} textAnchor="middle" fill="var(--text)">Servicios</text>
-                  <rect x="250" y={200 - (selectedData.totalHours / 1000) * 150} width="100" height={(selectedData.totalHours / 1000) * 150} fill="var(--accent-2)" />
-                  <text x="300" y={180} textAnchor="middle" fill="var(--text)">Horas</text>
+                <svg width="100%" height="150" viewBox="0 0 400 150">
+                  <rect x="50" y={150 - (selectedData.servicesCount / 100) * 100} width="100" height={(selectedData.servicesCount / 100) * 100} fill="var(--accent)" />
+                  <text x="100" y={130} textAnchor="middle" fill="var(--text)">Servicios</text>
+                  <rect x="250" y={150 - (selectedData.totalHours / 1000) * 100} width="100" height={(selectedData.totalHours / 1000) * 100} fill="var(--accent-2)" />
+                  <text x="300" y={130} textAnchor="middle" fill="var(--text)">Horas</text>
                 </svg>
               </div>
             </div>
@@ -92,7 +184,7 @@ export default function ServiciosPrestados() {
           <div className={styles.profilesContainer}>
             <h2>Evolución de Servicios por Horas y Perfil - {new Date(selectedMonth + '-01').toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</h2>
             <div className={styles.profilesGrid}>
-              {profiles.map(profile => {
+              {profiles.map((profile: Profile) => {
                 const profileData = selectedData.byProfile[profile];
                 return (
                   <div key={profile} className={styles.profileCard}>

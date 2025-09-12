@@ -63,7 +63,6 @@ export default function Economic(){
 
   // yearly comparison small bar data
   const otherYear = years.find(y=>y!==year) || years[0]
-  const comp = econData.data[otherYear]
 
   // compute YTD totals for selected month (inclusive)
   const selIdx = selectedMonth
@@ -130,9 +129,6 @@ export default function Economic(){
   // pagination for requisites
   const [page, setPage] = useState(1)
   const perPage = 10
-  const totalReq = d.requisites.length
-  const totalPages = Math.max(1, Math.ceil(totalReq / perPage))
-  const pagedReqs = d.requisites.slice((page-1)*perPage, page*perPage)
   // table improvements: search, sorting, rows per page
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<'code'|'description'|'facturacion'|'estimacion'>('code')

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import styles from './AnsDashboard.module.css'
 import ansData from '../../data/ansData'
-import sampleData from '../../data/sampleData'
 import Card from '../Card'
 
 type Cat = 'niv'|'dis'|'ons'|'seg'|'cmu'
@@ -17,7 +16,7 @@ type MetricItem = {
 
 type Filters = { month?: string; lote?: string; req?: string }
 
-export default function AnsDashboard({metrics, filters}:{metrics?: MetricItem[], filters?: Filters}){
+export default function AnsDashboard({filters}:{filters?: Filters}){
   const [cat, setCat] = useState<Cat>('niv')
 
   const months = ansData.months
@@ -115,7 +114,7 @@ export default function AnsDashboard({metrics, filters}:{metrics?: MetricItem[],
       </div>
 
       <div className={styles.grid} role="region" aria-live="polite">
-        {cardItems.map((it, idx) => <Card key={it.id} item={it as any} index={idx} />)}
+        {cardItems.map((it, idx) => <Card key={it.id} item={it} index={idx} />)}
       </div>
     </div>
   )

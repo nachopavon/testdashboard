@@ -3,7 +3,82 @@ import { workloadData, profileWorkload } from '../data/cargaTrabajoData';
 import { months } from '../data/serviciosPrestadosData';
 import styles from './CargaTrabajo.module.css';
 
-type Filters = { month?: string; lote?: string; req?: string };
+// Generate SVG utilization evolution chart
+function generateUtilizationEvolutionChart(data: {month: string, utilization: Record<string, number>}[], width = 600, height = 300) {
+  if (!data || data.length === 0) return null;
+
+  const profiles = Object.keys(data[0].utilization);
+  const colors = ['#007acc', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      {/* Grid lines */}
+      <defs>
+        <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" strokeWidth="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+      
+      {/* Y-axis labels */}
+      <text x="10" y="30" fontSize="12" fill="#666">Utilización (%)</text>
+      
+      {/* Profile lines */}
+      {profiles.map((profile, profileIndex) => {
+        const profileData = data.map(d => ({ month: d.month, value: d.utilization[profile] || 0 }));
+        const values = profileData.map(d => d.value);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const range = max - min || 1;
+
+        const points = profileData.map((d, i) => {
+          const x = (i / (profileData.length - 1)) * (width - 80) + 40;
+          const y = height - 60 - ((d.value - min) / range) * (height - 120);
+          return `${x},${y}`;
+        }).join(' ');
+
+        const color = colors[profileIndex % colors.length];
+
+        return (
+          <g key={profile}>
+            <polyline 
+              fill="none" 
+              stroke={color} 
+              strokeWidth="2" 
+              points={points} 
+            />
+            {profileData.map((d, i) => {
+              const x = (i / (profileData.length - 1)) * (width - 80) + 40;
+              const y = height - 60 - ((d.value - min) / range) * (height - 120);
+              return <circle key={`${profile}-${i}`} cx={x} cy={y} r="3" fill={color} />
+            })}
+          </g>
+        );
+      })}
+      
+      {/* X-axis labels */}
+      {data.map((d, i) => {
+        if (i % Math.ceil(data.length / 6) === 0 || i === data.length - 1) {
+          const x = (i / (data.length - 1)) * (width - 80) + 40;
+          return (
+            <text key={`label-${i}`} x={x} y={height - 10} fontSize="10" fill="#666" textAnchor="middle">
+              {d.month}
+            </text>
+          );
+        }
+        return null;
+      })}
+      
+      {/* Legend */}
+      {profiles.map((profile, i) => (
+        <g key={`legend-${profile}`}>
+          <rect x={width - 120} y={20 + i * 15} width="12" height="3" fill={colors[i % colors.length]} />
+          <text x={width - 100} y={25 + i * 15} fontSize="11" fill="#666">{profile}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
 
 export default function CargaTrabajo() {
   const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1]);
@@ -51,6 +126,11 @@ export default function CargaTrabajo() {
             ))}
           </select>
         </div>
+      </div>
+
+      <div className={styles.evolutionChart}>
+        <h2>Evolución de Utilización por Perfil - Toda la Duración del Contrato</h2>
+        {generateUtilizationEvolutionChart(workloadData)}
       </div>
 
       <div className={styles.profilesGrid}>

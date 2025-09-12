@@ -21,10 +21,10 @@ export default function Sidebar({
   cargaCount=0
 }:Props){
   const [collapsed, setCollapsed] = useState(()=>{
-    try{ return localStorage.getItem('td_sidebar_collapsed') === '1' }catch(e){ return false }
+    try{ return localStorage.getItem('td_sidebar_collapsed') === '1' }catch{ return false }
   })
 
-  useEffect(()=>{ try{ localStorage.setItem('td_sidebar_collapsed', collapsed ? '1' : '0') }catch(e){} }, [collapsed])
+  useEffect(()=>{ try{ localStorage.setItem('td_sidebar_collapsed', collapsed ? '1' : '0') }catch{ /* ignore */ } }, [collapsed])
 
   function handleKeyClick(event:React.KeyboardEvent, v:'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'){
     if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); onChange(v) }
@@ -110,8 +110,8 @@ export default function Sidebar({
 
         <button
           className={`${styles.navBtn} ${view==='chat'?styles.btnActive:''}`}
-          onClick={() => { try{ sessionStorage.setItem('td_show_chat_welcome','1') }catch(e){}; try{ window.dispatchEvent(new Event('td_show_chat_welcome')) }catch(e){}; onChange('chat') }}
-          onKeyDown={(e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); try{ sessionStorage.setItem('td_show_chat_welcome','1') }catch(e){}; try{ window.dispatchEvent(new Event('td_show_chat_welcome')) }catch(e){}; onChange('chat') } }}
+          onClick={() => { try{ sessionStorage.setItem('td_show_chat_welcome','1'); window.dispatchEvent(new CustomEvent('td:show-chat-welcome')) }catch{ /* ignore */ }; onChange('chat') }}
+          onKeyDown={(e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); try{ sessionStorage.setItem('td_show_chat_welcome','1'); window.dispatchEvent(new CustomEvent('td:show-chat-welcome')) }catch{ /* ignore */ }; onChange('chat') } }}
           aria-pressed={view==='chat'}
           title="Chat sobre datos"
         >

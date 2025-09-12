@@ -43,6 +43,22 @@
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
 }
 
+.evolutionChart {
+  background: var(--card-bg);
+  border-radius: var(--junta-radius);
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--ui-border);
+}
+
+.evolutionChart h2 {
+  font-size: var(--heading-2);
+  color: var(--text);
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
 .header {
   display: flex;
   justify-content: space-between;

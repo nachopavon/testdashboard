@@ -3,8 +3,6 @@ import { pendingServicesByMonth, pendingStatsByMonth } from '../data/serviciosPe
 import { months } from '../data/serviciosPrestadosData';
 import styles from './ServiciosPendientes.module.css';
 
-type Filters = { month?: string; lote?: string; req?: string };
-
 export default function ServiciosPendientes() {
   const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1]);
   const pendingServices = pendingServicesByMonth[selectedMonth] || [];

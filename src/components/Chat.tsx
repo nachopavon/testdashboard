@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import styles from './Chat.module.css'
 import econData from '../data/economicData'
 import ansData from '../data/ansData'
-import { servicesEvolution, profiles } from '../data/serviciosPrestadosData'
+import { servicesEvolution, Profile } from '../data/serviciosPrestadosData'
 import { pendingServicesByMonth, pendingStatsByMonth } from '../data/serviciosPendientesData'
 import { workloadData, profileWorkload } from '../data/cargaTrabajoData'
 
@@ -21,11 +21,11 @@ function normalizeText(t:string){
       .toLowerCase()
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
-      .replace(/[¿?¡!.,:\/\\\-()]/g, ' ')
+      .replace(/[¿?¡!.,:/\-\-()]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-  }catch(e){
-    return t.toLowerCase().replace(/[¿?¡!.,:\/\\\-()]/g,' ').replace(/\s+/g,' ').trim()
+  }catch{
+    return t.toLowerCase().replace(/[¿?¡!.,:/\-\-()]/g,' ').replace(/\s+/g,' ').trim()
   }
 }
 
@@ -46,42 +46,42 @@ function normalizeText(t:string){
     },
     'perfil gp - servicios': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).GP
+      const d = latestMonth.byProfile.GP
       return `Perfil GP en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
     },
     'perfil an - servicios': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).AN
+      const d = latestMonth.byProfile.AN
       return `Perfil AN en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
     },
     'perfil as - servicios': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).AS
+      const d = latestMonth.byProfile.AS
       return `Perfil AS en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
     },
     'perfil ars - servicios': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).ARS
+      const d = latestMonth.byProfile.ARS
       return `Perfil ARS en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
     },
     'perfil de - servicios': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).DE
+      const d = latestMonth.byProfile.DE
       return `Perfil DE en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
     },
     'perfil cd - servicios': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).CD
+      const d = latestMonth.byProfile.CD
       return `Perfil CD en ${latestMonth.month}: ${d.services} servicios, ${d.hours} horas.`
     },
     'perfil gp - horas': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).GP
+      const d = latestMonth.byProfile.GP
       return `Perfil GP en ${latestMonth.month}: ${d.hours} horas.`
     },
     'perfil de - horas': () => {
       const latestMonth = servicesEvolution[servicesEvolution.length - 1]
-      const d = (latestMonth.byProfile as any).DE
+      const d = latestMonth.byProfile.DE
       return `Perfil DE en ${latestMonth.month}: ${d.hours} horas.`
     },
 
@@ -94,28 +94,28 @@ function normalizeText(t:string){
     'por estado': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
       const stats = pendingStatsByMonth[latest] || { byStatus: {} }
-      const statusSummary = Object.entries((stats as any).byStatus).map(([k,v])=>`${k}: ${v}`).join(', ')
+      const statusSummary = Object.entries(stats.byStatus).map(([k,v])=>`${k}: ${v}`).join(', ')
       return `Estado de servicios pendientes en ${latest}: ${statusSummary}.`
     },
     'perfil gp - pendientes': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
-      return `Perfil GP en ${latest}: ${((stats as any).byProfile.GP || 0)} servicios pendientes.`
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} as Record<Profile, number> }
+      return `Perfil GP en ${latest}: ${(stats.byProfile.GP || 0)} servicios pendientes.`
     },
     'perfil an - pendientes': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
-      return `Perfil AN en ${latest}: ${((stats as any).byProfile.AN || 0)} servicios pendientes.`
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} as Record<Profile, number> }
+      return `Perfil AN en ${latest}: ${(stats.byProfile.AN || 0)} servicios pendientes.`
     },
     'perfil as - pendientes': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
-      return `Perfil AS en ${latest}: ${((stats as any).byProfile.AS || 0)} servicios pendientes.`
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} as Record<Profile, number> }
+      return `Perfil AS en ${latest}: ${(stats.byProfile.AS || 0)} servicios pendientes.`
     },
     'perfil de - pendientes': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byProfile: {} }
-      return `Perfil DE en ${latest}: ${((stats as any).byProfile.DE || 0)} servicios pendientes.`
+      const stats = pendingStatsByMonth[latest] || { byProfile: {} as Record<Profile, number> }
+      return `Perfil DE en ${latest}: ${(stats.byProfile.DE || 0)} servicios pendientes.`
     },
     'horas estimadas totales': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
@@ -124,18 +124,18 @@ function normalizeText(t:string){
     },
     'en progreso': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
-      return `En progreso en ${latest}: ${((stats as any).byStatus['En Progreso'] || 0)} servicios.`
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} as Record<string, number> }
+      return `En progreso en ${latest}: ${(stats.byStatus['En Progreso'] || 0)} servicios.`
     },
     'bloqueados': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
-      return `Bloqueados en ${latest}: ${((stats as any).byStatus['Bloqueado'] || 0)} servicios.`
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} as Record<string, number> }
+      return `Bloqueados en ${latest}: ${(stats.byStatus['Bloqueado'] || 0)} servicios.`
     },
     'en revisión': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
-      const stats = pendingStatsByMonth[latest] || { byStatus: {} }
-      return `En revisión en ${latest}: ${((stats as any).byStatus['Revisión'] || 0)} servicios.`
+      const stats = pendingStatsByMonth[latest] || { byStatus: {} as Record<string, number> }
+      return `En revisión en ${latest}: ${(stats.byStatus['Revisión'] || 0)} servicios.`
     },
 
     // Carga de trabajo
@@ -255,7 +255,7 @@ function normalizeText(t:string){
 
   // try exact match first
   if(exactMap[exactKey]){
-    try{ return exactMap[exactKey]() }catch(e){ /* fallthrough to fuzzy matching */ }
+    try{ return exactMap[exactKey]() }catch{ /* fallthrough to fuzzy matching */ }
   }
 
   // try normalized exact match (robust against punctuation/accents)
@@ -263,13 +263,13 @@ function normalizeText(t:string){
   Object.keys(exactMap).forEach(k=>{ normalizedExactMap[normalizeText(k)] = exactMap[k] })
   const nk = normalizeText(q)
   if(normalizedExactMap[nk]){
-    try{ return normalizedExactMap[nk]() }catch(e){}
+    try{ return normalizedExactMap[nk]() }catch{ /* fallthrough */ }
   }
   // economic queries
   if(s.includes('factur') || s.includes('estim') || s.includes('coste')){
     const y = findYearInText(s) || (econData.years[0])
     const yStr = String(y)
-    const entry = (econData as any).data[yStr]
+    const entry = econData.data?.[yStr]
     if(entry){
       const totalFact = entry.facturacion || 0
       const totalEst = entry.estimacion || 0
@@ -368,12 +368,11 @@ function normalizeText(t:string){
   // Servicios Pendientes queries
   if(s.includes('servicio') && (s.includes('pendiente') || s.includes('espera') || s.includes('cola'))){
     const latestMonth = Object.keys(pendingServicesByMonth)[Object.keys(pendingServicesByMonth).length - 1]
-    const pendingServices = pendingServicesByMonth[latestMonth] || []
-    const stats = pendingStatsByMonth[latestMonth] || { total: 0, byStatus: {}, byProfile: {}, totalEstimatedHours: 0 }
+    const stats = pendingStatsByMonth[latestMonth] || { total: 0, byStatus: {} as Record<string, number>, byProfile: {} as Record<Profile, number>, totalEstimatedHours: 0 }
     
     // Specific status queries
     if(s.includes('progreso') || s.includes('en progreso') || s.includes('progreso') || s.includes('🔄') || s.includes('en progreso')){
-      const inProgressCount = (stats.byStatus as any)['En Progreso'] || 0
+      const inProgressCount = stats.byStatus['En Progreso'] || 0
       return `Servicios en progreso en ${latestMonth}: ${inProgressCount} servicios.`
     }
     
@@ -412,7 +411,6 @@ function normalizeText(t:string){
   // Carga de Trabajo queries
   if((s.includes('carga') && s.includes('trabajo')) || s.includes('utilización') || s.includes('ocupación') || s.includes('capacidad') || s.includes('💼') || s.includes('carga de trabajo') || s.includes('📈') || s.includes('⏱️') || s.includes('👔') || s.includes('📊') || s.includes('💻') || s.includes('🏗️') || s.includes('👨‍💻') || s.includes('🎯') || s.includes('utilización promedio') || s.includes('utilización media') || s.includes('utilización general') || s.includes('horas trabajadas totales') || s.includes('horas totales trabajadas') || s.includes('gp (gestor de proyecto)') || s.includes('an (analista de negocio)') || s.includes('as (analista de sistemas)') || s.includes('ars (arquitecto de sistemas)') || s.includes('de (desarrollador)') || s.includes('cd (consultor digital)')){
     const latestData = workloadData[workloadData.length - 1]
-    const totalHours = latestData.totalHours
     const avgUtilization = Math.round(
       Object.values(latestData.utilization).reduce((sum, u) => sum + u, 0) / Object.values(latestData.utilization).length
     )
@@ -485,7 +483,6 @@ function normalizeText(t:string){
 
 // Produce a slightly more elaborate IA-like response combining the brief data answer
 function enhanceResponse(question:string, shortAnswer:string){
-  const q = question.trim()
   if(!shortAnswer || shortAnswer.trim() === '') return 'Lo siento, no tengo información precisa para responder eso en este momento.'
 
   // Simple heuristics to expand responses
@@ -498,7 +495,14 @@ function enhanceResponse(question:string, shortAnswer:string){
     const latest = servicesEvolution[servicesEvolution.length - 1]
     const evoVals = servicesEvolution.map(m=>m.servicesCount)
     visual = sparkline(evoVals)
+    
+    // Add SVG chart for evolution
+    const chartData = servicesEvolution.map(m => ({month: m.month, value: m.servicesCount}))
+    const svgChart = generateEvolutionChart(chartData, 'Evolución Servicios Prestados')
+    
     core = `${shortAnswer} En detalle, en ${latest.month} hubo ${latest.servicesCount} servicios con ${latest.totalHours}h totales. Los perfiles con más actividad fueron: ${Object.entries(latest.byProfile).sort((a:any,b:any)=> (b[1].services||0)-(a[1].services||0)).slice(0,3).map(([k,v])=>`${k} (${v.services} servicios)`).join(', ')}. Puedo mostrar la evolución por mes o filtrar por perfil si quieres.`
+    
+    visual = `${visual}\n\n${svgChart}`
   }
 
   // Horas totales o métricas de tiempo
@@ -523,8 +527,13 @@ function enhanceResponse(question:string, shortAnswer:string){
     const avg = Math.round(Object.values(latest.utilization).reduce((s,n)=>s+n,0)/Object.values(latest.utilization).length)
     const over = Object.entries(latest.utilization).filter(([,v])=>v > avg+10).map(([p])=>p)
     const bars = Object.entries(latest.utilization).map(([p,v])=>`${p.padEnd(3)} ${bar(v,100)} ${v}%`).join('\n')
+    
+    // Add SVG chart for utilization evolution
+    const chartData = workloadData.map(w => ({month: w.month, value: Math.round(Object.values(w.utilization).reduce((s,n)=>s+n,0)/Object.values(w.utilization).length)}))
+    const svgChart = generateEvolutionChart(chartData, 'Evolución Utilización Promedio')
+    
     core = `${shortAnswer} En ${latest.month} la utilización media fue ${avg}%. Perfiles con sobreutilización: ${over.length? over.join(', '): 'ninguno claramente destacado'}. Puedo ofrecer proyecciones o un desglose por perfil.`
-    visual = bars
+    visual = `${bars}\n\n${svgChart}`
   }
 
   // Facturación y ANS: añadir contexto y next steps
@@ -564,6 +573,36 @@ function bar(value:number, max:number){
   return '█'.repeat(filled) + '░'.repeat(Math.max(0, total - filled))
 }
 
+// Generate simple SVG line chart for evolution
+function generateEvolutionChart(data: {month: string, value: number}[], title: string, width = 300, height = 100){
+  if(!data || data.length === 0) return ''
+  
+  const values = data.map(d => d.value)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * (width - 40) + 20
+    const y = height - 20 - ((d.value - min) / range) * (height - 40)
+    return `${x},${y}`
+  }).join(' ')
+  
+  const svg = `
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <text x="10" y="15" font-size="12" fill="#666">${title}</text>
+  <polyline fill="none" stroke="#007acc" stroke-width="2" points="${points}" />
+  ${data.map((d, i) => {
+    const x = (i / (data.length - 1)) * (width - 40) + 20
+    const y = height - 20 - ((d.value - min) / range) * (height - 40)
+    return `<circle cx="${x}" cy="${y}" r="3" fill="#007acc" />`
+  }).join('')}
+  <text x="${width-30}" y="${height-5}" font-size="10" fill="#666">${data[data.length-1]?.month || ''}</text>
+</svg>`
+  
+  return svg
+}
+
 
 export default function Chat(){
   const [input, setInput] = useState('')
@@ -582,7 +621,7 @@ export default function Chat(){
         ]
       }
       return saved
-    }catch(e){ 
+    }catch{ 
       return [
         {from: 'bot', text: '¡Hola! Puedo ayudarte con información sobre facturación, ANS, servicios prestados, servicios pendientes y carga de trabajo. Haz clic en cualquiera de estas preguntas de ejemplo:'},
         {from: 'bot', text: '• "¿Cuántos servicios prestados hay este mes?"'},
@@ -596,7 +635,7 @@ export default function Chat(){
   const panelRef = useRef<HTMLDivElement|null>(null)
 
   useEffect(()=>{
-    try{ localStorage.setItem('td_chat_history', JSON.stringify(history)) }catch(e){}
+    try{ localStorage.setItem('td_chat_history', JSON.stringify(history)) }catch{ /* ignore */ }
   },[history])
 
   // show welcome cards if sidebar requested it
@@ -607,12 +646,19 @@ export default function Chat(){
         setHistory([])
         sessionStorage.removeItem('td_show_chat_welcome')
       }
-    }catch(e){}
+    }catch{ /* ignore */ }
+  }, [])
+
+  // Listen to DOM event dispatched from Sidebar to show welcome cards
+  useEffect(()=>{
+    function onShow(){ try{ setHistory([]) }catch{ /* ignore */ } }
+    window.addEventListener('td:show-chat-welcome', onShow as any)
+    return ()=>{ window.removeEventListener('td:show-chat-welcome', onShow as any) }
   }, [])
 
   // also listen to a window event dispatched by Sidebar when user clicks chat option
   useEffect(()=>{
-    const handler = () => { try{ setHistory([]); sessionStorage.removeItem('td_show_chat_welcome') }catch(e){} }
+    const handler = () => { try{ setHistory([]); sessionStorage.removeItem('td_show_chat_welcome') }catch{ /* ignore */ } }
     window.addEventListener('td_show_chat_welcome', handler)
     return ()=> window.removeEventListener('td_show_chat_welcome', handler)
   }, [])
@@ -626,14 +672,14 @@ export default function Chat(){
     setTimeout(()=>{
   const dataAnswer = answerFromData(q)
   let a = dataAnswer || 'Lo siento, no encuentro datos precisos para esa consulta.'
-  try{ a = enhanceResponse(q, a) }catch(e){}
+  try{ a = enhanceResponse(q, a) }catch{ /* ignore */ }
   setHistory(h => [{from:'bot', text: a}, ...h])
       setLoading(false)
       if(panelRef.current) panelRef.current.scrollTop = 0
     }, 600)
   }
 
-  function clearHistory(){ setHistory([]); try{ localStorage.removeItem('td_chat_history') }catch(e){} }
+  function clearHistory(){ setHistory([]); try{ localStorage.removeItem('td_chat_history') }catch{ /* ignore */ } }
 
   function quickExample(example:string){
     if(loading) return // prevent multiple clicks while processing
@@ -651,7 +697,7 @@ export default function Chat(){
       variants.push(q)
       variants.push(q.toLowerCase())
       // strip punctuation
-      variants.push(q.replace(/[¿?¡!.,:;\-()\/\\]/g,' '))
+      variants.push(q.replace(/[¿?¡!.,:;\-()/\-\-]/g,' '))
       // remove accents (simple replacements)
       const deAccent = (s:string)=>s.replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
       variants.push(deAccent(q))
@@ -663,7 +709,7 @@ export default function Chat(){
         if(tryA && tryA.trim() !== ''){ a = tryA; break }
       }
   if(!a) a = 'Lo siento, no tengo datos exactos para esa pregunta.'
-  try{ a = enhanceResponse(q, a) }catch(e){}
+  try{ a = enhanceResponse(q, a) }catch{ /* ignore */ }
   setHistory(h => [{from:'bot', text: a}, ...h])
       setLoading(false)
       if(panelRef.current) panelRef.current.scrollTop = 0

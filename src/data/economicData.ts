@@ -110,15 +110,15 @@ years.forEach((y) => {
 
   // allocate facturacion cents proportionally to weights
   let allocatedFactCents = 0
-  const factCentsByReq: number[] = weights.map((w, i) => {
+  const factCentsByReq: number[] = weights.map((w) => {
     const v = Math.floor((totalFactCents * w) / weightSum)
     allocatedFactCents += v
     return v
   })
   // distribute remaining cents due to flooring
   let remainingFact = totalFactCents - allocatedFactCents
-  for (let i = 0; remainingFact > 0; i = (i + 1) % reqCount) {
-    factCentsByReq[i] += 1
+  for (let _i = 0; remainingFact > 0; _i = (_i + 1) % reqCount) {
+    factCentsByReq[_i] += 1
     remainingFact -= 1
   }
 

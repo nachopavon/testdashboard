@@ -6,7 +6,7 @@ function clamp(n:number){
   return Math.max(0, Math.min(100, n))
 }
 
-export default function Gauge({value, target, unit}:{value:number, target:number, unit?:string}){
+export default function Gauge({value, target}:{value:number, target:number}){
   const percentage = Math.round(clamp(value) * 10) / 10
   const pctForStroke = clamp(percentage) / 100
   const circ = 2 * Math.PI * 44 // radius 44
