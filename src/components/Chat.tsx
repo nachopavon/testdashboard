@@ -30,15 +30,17 @@ function normalizeText(t:string){
   }
 }
 
+// global helper to safely get ANS lists (used by multiple functions)
+function safeAnsList(cat: string): Indicator[] {
+  const raw = (ansData as unknown as Record<string, unknown>)[cat]
+  if(!Array.isArray(raw)) return []
+  return (raw as unknown[]).map(it => it as Indicator)
+}
+
   function answerFromData(q:string){
   const s = q.toLowerCase()
   const exactKey = s.trim()
-    // helper to safely get ANS lists
-    const safeAnsList = (cat: string): Indicator[] => {
-      const raw = (ansData as unknown as Record<string, unknown>)[cat]
-      if(!Array.isArray(raw)) return []
-      return (raw as unknown[]).map(it => it as Indicator)
-    }
+    
   
 
   // Exact mappings for the card texts (lowercased)
@@ -524,11 +526,17 @@ function enhanceResponse(question:string, shortAnswer:string){
   if(lower.includes('pendientes') || lower.includes('bloquead') || lower.includes('en revisión')){
     const lm = Object.keys(pendingStatsByMonth).pop() || ''
     const stats = pendingStatsByMonth[lm] || { total:0, byStatus:{}, totalEstimatedHours:0 }
-  const byStatus = stats.byStatus || {}
-  const topStates = Object.entries(byStatus).sort((a,b)=> (b[1] as number) - (a[1] as number)).slice(0,3).map(([s,c])=>`${s} (${c})`).join(', ')
-  const statusLines = Object.entries(byStatus).map(([s,c])=>`${s.padEnd(12)} | ${String(c).padStart(3)}`).join('\n')
+    const byStatus = stats.byStatus || {}
+    const entries = Object.entries(byStatus).map(([k,v])=>({k, v: Number(v)}))
+    const topStates = entries.slice().sort((a,b)=>b.v-a.v).slice(0,3).map(e=>`${e.k} (${e.v})`).join(', ')
+    // build an HTML table for the status summary
+    const tableRows = entries.map(e=>`<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${e.k}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${e.v}</td></tr>`).join('')
+  const tableHtml = `<table style="border-collapse:collapse;width:100%;margin-top:8px"><thead><tr><th style="text-align:left;padding:6px 10px;border-bottom:2px solid #ddd">Estado</th><th style="text-align:right;padding:6px 10px;border-bottom:2px solid #ddd">Cantidad</th></tr></thead><tbody>${tableRows}</tbody></table>`
+    // small bar chart for quick visual
+    const barChart = generateBarChart(entries.map(e=>({label: e.k, value: e.v})), `Estados - ${lm}`, 320, 90)
+
     core = `${shortAnswer} Al cierre de ${lm}: ${stats.total} pendientes, ${stats.totalEstimatedHours}h estimadas. Estados principales: ${topStates}. Puedo listar los pendientes filtrando por estado o perfil.`
-    visual = statusLines
+    visual = `${tableHtml}\n\n${barChart}`
   }
 
   // Carga de trabajo / utilización
@@ -552,13 +560,31 @@ function enhanceResponse(question:string, shortAnswer:string){
   const y = years[0] || Object.keys((econData as unknown as EconomicData).data)[0]
   const entry = (econData as unknown as EconomicData).data[String(y)] || {}
     const mf = entry.monthlyFacturacion || []
-    const spark = mf.length? sparkline(mf) : ''
     core = `${shortAnswer} Si quieres puedo mostrar la serie mensual completa, comparar con la estimación anual o detectar meses atípicos.`
-    visual = spark
+    if(Array.isArray(mf) && mf.length){
+      const monthsLabels = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+      const chartData = mf.map((v,i)=>({month: monthsLabels[i] || String(i+1), value: Math.round(v || 0)}))
+      const svgChart = generateEvolutionChart(chartData, `Facturación ${y}`, 340, 90)
+      visual = svgChart
+    }
   }
 
   if(lower.includes('ans') || lower.includes('indicador') || lower.includes('niv') || lower.includes('dis')){
     core = `${shortAnswer} Puedo desglosar por indicador, mostrar el top de cumplimiento o generar un ranking por cumplimiento respecto al objetivo.`
+    // if user asked about top indicators, produce a small HTML table
+    if(lower.includes('top') || lower.includes('mejor') || lower.includes('mejores')){
+      const cat = lower.includes('niv') ? 'niv' : lower.includes('dis') ? 'dis' : lower.includes('ons') ? 'ons' : lower.includes('seg') ? 'seg' : lower.includes('cmu') ? 'cmu' : 'niv'
+      const listInd = safeAnsList(cat)
+      const latest = ansData.months[ansData.months.length-1]
+      const rows = listInd.map((it,idx)=>{
+        const v = (it.monthly||{})[latest] || 0
+        const t = it.target || 0
+        const pct = t>0? Math.round((v/t)*1000)/10 : 100
+  return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${it.title||`Indicador ${idx+1}`}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${pct}%</td></tr>`
+      }).slice(0,10).join('')
+  const table = `<table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:6px 10px;border-bottom:2px solid #ddd">Indicador</th><th style="text-align:right;padding:6px 10px;border-bottom:2px solid #ddd">Cumplimiento</th></tr></thead><tbody>${rows}</tbody></table>`
+      visual = table
+    }
   }
 
   // Fallback: añadir una pregunta de seguimiento
@@ -610,6 +636,30 @@ function generateEvolutionChart(data: {month: string, value: number}[], title: s
   <text x="${width-30}" y="${height-5}" font-size="10" fill="#666">${data[data.length-1]?.month || ''}</text>
 </svg>`
   
+  return svg
+}
+
+// Simple bar chart generator returning an SVG string for small inline charts
+function generateBarChart(items: {label: string, value: number}[], title = '', width = 300, height = 80){
+  if(!items || items.length===0) return ''
+  const max = Math.max(...items.map(i=>i.value), 1)
+  const padding = 20
+  const availableWidth = width - padding * 2
+  const barWidth = Math.max(12, Math.floor(availableWidth / items.length))
+  const bars = items.map((it, idx)=>{
+    const x = padding + idx * barWidth
+    const h = Math.round((it.value / max) * (height - 30))
+    const y = height - 10 - h
+    const labelY = height - 2
+    return `<rect x="${x}" y="${y}" width="${Math.max(6, barWidth - 6)}" height="${h}" fill="#007acc" />` +
+           `<text x="${x + Math.max(6, (barWidth-6)/2)}" y="${labelY}" font-size="10" fill="#333" text-anchor="middle">${it.label}</text>`
+  }).join('')
+
+  const svg = `
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <text x="10" y="12" font-size="12" fill="#666">${title}</text>
+  ${bars}
+</svg>`
   return svg
 }
 
@@ -867,7 +917,28 @@ export default function Chat(){
           ) : (
             history.map((h, i) => (
               <div key={i} className={h.from === 'user' ? styles.msgRowUser : styles.msgRowBot}>
-                <div className={h.from === 'user' ? styles.msgUser : styles.msgBot}>{h.text}</div>
+                <div className={h.from === 'user' ? styles.msgUser : styles.msgBot}>
+                  {typeof h.text === 'string' ? (
+                    // If the text contains an SVG tag, render it as HTML so the graphic displays
+                    h.text.includes('<svg') ? (
+                      <div dangerouslySetInnerHTML={{ __html: h.text }} />
+                    ) : // If the text contains multiple lines or '|' separators, render a more structured block
+                    (h.text.includes('\n') || h.text.includes('|')) ? (
+                      // If '|' separators are present and look like key|value pairs, split into inline items
+                      (h.text.includes('|') && !h.text.includes('\n')) ? (
+                        <div className={styles.inlineTable}>
+                          {h.text.split('|').map((part, idx) => (
+                            <div key={idx} className={styles.inlineTableItem}>{part.trim()}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        <pre className={styles.pre}>{h.text}</pre>
+                      )
+                    ) : (
+                      h.text
+                    )
+                  ) : null}
+                </div>
               </div>
             ))
           )}
