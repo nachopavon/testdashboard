@@ -4,14 +4,15 @@ import { months } from '../data/serviciosPrestadosData';
 import styles from './CargaTrabajo.module.css';
 
 // Generate SVG utilization evolution chart
-function generateUtilizationEvolutionChart(data: {month: string, utilization: Record<string, number>}[], width = 600, height = 300) {
+function generateUtilizationEvolutionChart(data: {month: string, utilization: Record<string, number>}[], width = 600, height = 300): React.ReactElement | null {
   if (!data || data.length === 0) return null;
 
   const profiles = Object.keys(data[0].utilization);
   const colors = ['#007acc', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+    <div className={styles.svgWrapperCentered}>
+      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
       {/* Grid lines */}
       <defs>
         <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
@@ -76,7 +77,8 @@ function generateUtilizationEvolutionChart(data: {month: string, utilization: Re
           <text x={width - 100} y={25 + i * 15} fontSize="11" fill="#666">{profile}</text>
         </g>
       ))}
-    </svg>
+      </svg>
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styles from './Chat.module.css'
-import econData from '../data/economicData'
-import ansData from '../data/ansData'
+import econData, { EconomicData, EconomicYearData } from '../data/economicData'
+import ansData, { Indicator } from '../data/ansData'
 import { servicesEvolution, Profile } from '../data/serviciosPrestadosData'
 import { pendingServicesByMonth, pendingStatsByMonth } from '../data/serviciosPendientesData'
 import { workloadData, profileWorkload } from '../data/cargaTrabajoData'
@@ -20,18 +20,25 @@ function normalizeText(t:string){
     return t
       .toLowerCase()
       .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .replace(/[¿?¡!.,:/\-\-()]/g, ' ')
+    .replace(/\p{Diacritic}/gu, '')
+    // remove most punctuation (keep letters, numbers and whitespace, plus inverted punctuation common in Spanish)
+    .replace(/[^^\p{L}\p{N}\s¿¡]/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim()
   }catch{
-    return t.toLowerCase().replace(/[¿?¡!.,:/\-\-()]/g,' ').replace(/\s+/g,' ').trim()
+    return t.toLowerCase().replace(/[^\p{L}\p{N}\s¿¡]/gu,' ').replace(/\s+/g,' ').trim()
   }
 }
 
   function answerFromData(q:string){
   const s = q.toLowerCase()
   const exactKey = s.trim()
+    // helper to safely get ANS lists
+    const safeAnsList = (cat: string): Indicator[] => {
+      const raw = (ansData as unknown as Record<string, unknown>)[cat]
+      if(!Array.isArray(raw)) return []
+      return (raw as unknown[]).map(it => it as Indicator)
+    }
   
 
   // Exact mappings for the card texts (lowercased)
@@ -94,7 +101,7 @@ function normalizeText(t:string){
     'por estado': () => {
       const latest = Object.keys(pendingServicesByMonth).pop() || ''
       const stats = pendingStatsByMonth[latest] || { byStatus: {} }
-      const statusSummary = Object.entries(stats.byStatus).map(([k,v])=>`${k}: ${v}`).join(', ')
+  const statusSummary = Object.entries(stats.byStatus).map(([k,v])=>`${k}: ${v}`).join(', ')
       return `Estado de servicios pendientes en ${latest}: ${statusSummary}.`
     },
     'perfil gp - pendientes': () => {
@@ -192,30 +199,30 @@ function normalizeText(t:string){
     // Facturación & ANS
     'facturación 2026': () => {
       const y = 2026
-      const entry = (econData as any).data[String(y)]
+      const entry = econData.data[String(y)]
       if(!entry) return `No hay datos de facturación para ${y}.`
       return `Aproximadamente ${Math.round(entry.facturacion).toLocaleString('es-ES')}€ de facturación en ${y}.`
     },
     'facturación 2027': () => {
       const y = 2027
-      const entry = (econData as any).data[String(y)]
+      const entry = econData.data[String(y)]
       if(!entry) return `No hay datos de facturación para ${y}.`
       return `Aproximadamente ${Math.round(entry.facturacion).toLocaleString('es-ES')}€ de facturación en ${y}.`
     },
     'indicadores niv': () => {
-      return `Indicadores NIV: ${((ansData as any).niv || []).length} indicadores disponibles.`
+      return `Indicadores NIV: ${(ansData.niv || []).length} indicadores disponibles.`
     },
     'indicadores dis': () => {
-      return `Indicadores DIS: ${((ansData as any).dis || []).length} indicadores disponibles.`
+      return `Indicadores DIS: ${(ansData.dis || []).length} indicadores disponibles.`
     },
     'indicadores ons': () => {
-      return `Indicadores ONS: ${((ansData as any).ons || []).length} indicadores disponibles.`
+      return `Indicadores ONS: ${(ansData.ons || []).length} indicadores disponibles.`
     },
     'indicadores seg': () => {
-      return `Indicadores SEG: ${((ansData as any).seg || []).length} indicadores disponibles.`
+      return `Indicadores SEG: ${(ansData.seg || []).length} indicadores disponibles.`
     },
     'indicadores cmu': () => {
-      return `Indicadores CMU: ${((ansData as any).cmu || []).length} indicadores disponibles.`
+      return `Indicadores CMU: ${(ansData.cmu || []).length} indicadores disponibles.`
     },
     'resumen ans': () => {
       const months = ansData.months
@@ -223,19 +230,19 @@ function normalizeText(t:string){
       return `Resumen ANS (mes ${latest}): consulta rápida generada.`
     },
     'requisitos 2026': () => {
-      const y = 2026; const entry = (econData as any).data[String(y)]
+      const y = 2026; const entry = econData.data[String(y)]
       const count = entry && Array.isArray(entry.requisites) ? entry.requisites.length : 0
       return `Aproximadamente ${count} requisitos en ${y}.`
     },
     'requisitos 2027': () => {
-      const y = 2027; const entry = (econData as any).data[String(y)]
+      const y = 2027; const entry = econData.data[String(y)]
       const count = entry && Array.isArray(entry.requisites) ? entry.requisites.length : 0
       return `Aproximadamente ${count} requisitos en ${y}.`
     },
     'mes pico facturación': () => {
-      const years = (econData as any).years || []
-      const y = years[0] || 2026
-      const entry = (econData as any).data[String(y)]
+  const years = econData.years || []
+  const y = years[0] || 2026
+  const entry = econData.data[String(y)]
       if(!entry) return 'No hay datos de facturación.'
       const months = entry.monthlyFacturacion || []
       let peakIdx = 0; for(let i=0;i<months.length;i++) if((months[i]||0) > (months[peakIdx]||0)) peakIdx = i
@@ -243,13 +250,13 @@ function normalizeText(t:string){
       return `Mes pico de facturación en ${y}: ${monthLabel}.`
     },
     'top indicadores niv': () => {
-      // reuse ANS top logic
-      const list = (ansData as any).niv || []
-      if(list.length===0) return 'No hay indicadores NIV.'
-      const latest = ansData.months[ansData.months.length-1]
-      const vals = list.map((it:any)=>{ const v=(it.monthly||{})[latest]||0; const t=it.target||0; return t>0? v/t:1 })
-      const indicators = list.map((it:any, idx:number)=>({ name: it.name || `Indicador ${idx+1}`, compliance: vals[idx]*100 })).sort((a:any,b:any)=>b.compliance-a.compliance).slice(0,3)
-      return `Top NIV: ${indicators.map((i:any)=>`${i.name}: ${i.compliance.toFixed(1)}%`).join(', ')}.`
+  // reuse ANS top logic
+  const list: Indicator[] = ansData.niv || []
+  if(list.length===0) return 'No hay indicadores NIV.'
+  const latest = ansData.months[ansData.months.length-1]
+  const vals = list.map((it: Indicator)=>{ const v=(it.monthly||{})[latest]||0; const t=it.target||0; return t>0? v/t:1 })
+  const indicators = list.map((it: Indicator, idx:number)=>({ name: it.title || `Indicador ${idx+1}`, compliance: vals[idx]*100 })).sort((a,b)=>b.compliance-a.compliance).slice(0,3)
+  return `Top NIV: ${indicators.map((i)=>`${i.name}: ${i.compliance.toFixed(1)}%`).join(', ')}.`
     }
   }
 
@@ -296,8 +303,8 @@ function normalizeText(t:string){
     const latest = months[months.length-1]
     
     if(targetCat){
-      const list = (ansData as any)[targetCat] as any[]
-      const vals = list.map(it => {
+      const listInd = safeAnsList(targetCat)
+      const vals = listInd.map(it => {
         const v = (it.monthly || {})[latest] || 0
         const t = it.target || 0
         return t>0 ? (v / t) : 1
@@ -306,8 +313,8 @@ function normalizeText(t:string){
       
       if(s.includes('top') || s.includes('mejor') || s.includes('mejores')){
         // Find top performing indicators
-        const indicators = list.map((it, idx) => ({
-          name: it.name || `Indicador ${idx + 1}`,
+        const indicators = listInd.map((it, idx) => ({
+          name: (it.title || `Indicador ${idx + 1}`),
           compliance: vals[idx] * 100
         })).sort((a, b) => b.compliance - a.compliance).slice(0, 3)
         
@@ -322,8 +329,8 @@ function normalizeText(t:string){
     const cats = ['niv','dis','ons','seg','cmu']
     const allVals:number[] = []
     cats.forEach(c=>{
-      const list = (ansData as any)[c] as any[]
-      list.forEach(it=>{ const v=(it.monthly||{})[latest]||0; const t=it.target||0; if(t>0) allVals.push(v/t) })
+      const listInd = safeAnsList(c)
+      listInd.forEach(it=>{ const v=(it.monthly||{})[latest]||0; const t=it.target||0; if(t>0) allVals.push(v/t) })
     })
     if(allVals.length===0) return 'No hay datos ANS disponibles.'
     const avg = Math.round((allVals.reduce((s,n)=>s+n,0)/allVals.length)*1000)/10
@@ -333,10 +340,10 @@ function normalizeText(t:string){
   // requisites / REQ info
   if(s.includes('req') || s.includes('requisit')){
     // sum requisites across years
-    const years = (econData as any).years || []
+    const years = (econData as unknown as { years?: number[] }).years || []
     let total = 0
     years.forEach((y:number)=>{
-      const d = (econData as any).data[String(y)]
+      const d = (econData as unknown as EconomicData).data?.[String(y)] as EconomicYearData | undefined
       if(d && Array.isArray(d.requisites)) total += d.requisites.length
     })
     return `Hay aproximadamente ${total} requisitos en los años generados (${years.join(', ')}).`
@@ -377,13 +384,13 @@ function normalizeText(t:string){
     }
     
     if(s.includes('bloqueado') || s.includes('bloqueados') || s.includes('🚫') || s.includes('bloqueado')){
-      const blockedCount = (stats.byStatus as any)['Bloqueado'] || 0
-      return `Servicios bloqueados en ${latestMonth}: ${blockedCount} servicios.`
+  const blockedCount = typeof stats.byStatus['Bloqueado'] === 'number' ? stats.byStatus['Bloqueado'] : 0
+  return `Servicios bloqueados en ${latestMonth}: ${blockedCount} servicios.`
     }
     
     if(s.includes('revisión') || s.includes('en revisión') || s.includes('✅') || s.includes('revisión')){
-      const reviewCount = (stats.byStatus as any)['Revisión'] || 0
-      return `Servicios en revisión en ${latestMonth}: ${reviewCount} servicios.`
+  const reviewCount = typeof stats.byStatus['Revisión'] === 'number' ? stats.byStatus['Revisión'] : 0
+  return `Servicios en revisión en ${latestMonth}: ${reviewCount} servicios.`
     }
     
     if(s.includes('estado') || s.includes('status') || s.includes('📊') || s.includes('por estado')){
@@ -400,8 +407,8 @@ function normalizeText(t:string){
       const mentionedProfile = profileQueries.find(p => s.includes(p))
       if(mentionedProfile){
         const profile = mentionedProfile.toUpperCase()
-        const profileCount = (stats.byProfile as any)[profile] || 0
-        return `Perfil ${profile} en ${latestMonth}: ${profileCount} servicios pendientes.`
+  const profileCount = typeof stats.byProfile[profile as keyof typeof stats.byProfile] === 'number' ? stats.byProfile[profile as keyof typeof stats.byProfile] : 0
+  return `Perfil ${profile} en ${latestMonth}: ${profileCount} servicios pendientes.`
       }
     }
     
@@ -411,56 +418,55 @@ function normalizeText(t:string){
   // Carga de Trabajo queries
   if((s.includes('carga') && s.includes('trabajo')) || s.includes('utilización') || s.includes('ocupación') || s.includes('capacidad') || s.includes('💼') || s.includes('carga de trabajo') || s.includes('📈') || s.includes('⏱️') || s.includes('👔') || s.includes('📊') || s.includes('💻') || s.includes('🏗️') || s.includes('👨‍💻') || s.includes('🎯') || s.includes('utilización promedio') || s.includes('utilización media') || s.includes('utilización general') || s.includes('horas trabajadas totales') || s.includes('horas totales trabajadas') || s.includes('gp (gestor de proyecto)') || s.includes('an (analista de negocio)') || s.includes('as (analista de sistemas)') || s.includes('ars (arquitecto de sistemas)') || s.includes('de (desarrollador)') || s.includes('cd (consultor digital)')){
     const latestData = workloadData[workloadData.length - 1]
-    const avgUtilization = Math.round(
-      Object.values(latestData.utilization).reduce((sum, u) => sum + u, 0) / Object.values(latestData.utilization).length
-    )
+  const utils = Object.values(latestData.utilization).filter(v => typeof v === 'number') as number[]
+  const avgUtilization = Math.round(utils.reduce((sum, u) => sum + u, 0) / Math.max(1, utils.length))
     
     // Specific profile queries
     if(s.includes('gp') || s.includes('gestor') || s.includes('proyecto') || s.includes('👔') || s.includes('gp (gestor de proyecto)')){
       const profileData = profileWorkload.find(p => p.profile === 'GP')
       if(profileData){
-        const latestProfileData = profileData.data[profileData.data.length - 1]
-        return `GP en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
+  const latestProfileData = profileData.data[profileData.data.length - 1]
+  return `GP en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
       }
     }
     
     if(s.includes('an') || s.includes('analista') || s.includes('negocio') || s.includes('📊') || s.includes('an (analista de negocio)')){
       const profileData = profileWorkload.find(p => p.profile === 'AN')
       if(profileData){
-        const latestProfileData = profileData.data[profileData.data.length - 1]
-        return `AN en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
+  const latestProfileData = profileData.data[profileData.data.length - 1]
+  return `AN en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
       }
     }
     
     if(s.includes('as') || s.includes('sistemas') || s.includes('analista sistemas') || s.includes('💻') || s.includes('as (analista de sistemas)')){
       const profileData = profileWorkload.find(p => p.profile === 'AS')
       if(profileData){
-        const latestProfileData = profileData.data[profileData.data.length - 1]
-        return `AS en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
+  const latestProfileData = profileData.data[profileData.data.length - 1]
+  return `AS en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
       }
     }
     
     if(s.includes('ars') || s.includes('arquitecto') || s.includes('arquitecto sistemas') || s.includes('🏗️') || s.includes('ars (arquitecto de sistemas)')){
       const profileData = profileWorkload.find(p => p.profile === 'ARS')
       if(profileData){
-        const latestProfileData = profileData.data[profileData.data.length - 1]
-        return `ARS en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
+  const latestProfileData = profileData.data[profileData.data.length - 1]
+  return `ARS en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
       }
     }
     
     if(s.includes('de') || s.includes('desarrollador') || s.includes('developer') || s.includes('👨‍💻') || s.includes('de (desarrollador)')){
       const profileData = profileWorkload.find(p => p.profile === 'DE')
       if(profileData){
-        const latestProfileData = profileData.data[profileData.data.length - 1]
-        return `DE en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
+  const latestProfileData = profileData.data[profileData.data.length - 1]
+  return `DE en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
       }
     }
     
     if(s.includes('cd') || s.includes('consultor') || s.includes('digital') || s.includes('🎯') || s.includes('cd (consultor digital)')){
       const profileData = profileWorkload.find(p => p.profile === 'CD')
       if(profileData){
-        const latestProfileData = profileData.data[profileData.data.length - 1]
-        return `CD en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
+  const latestProfileData = profileData.data[profileData.data.length - 1]
+  return `CD en ${latestData.month}: ${latestProfileData.utilization}% de utilización, ${latestProfileData.hours} horas trabajadas de 160 disponibles.`
       }
     }
     
@@ -469,12 +475,13 @@ function normalizeText(t:string){
     }
     
     if(s.includes('horas') || s.includes('trabajadas') || s.includes('⏱️') || s.includes('horas trabajadas totales') || s.includes('horas totales trabajadas') || s.includes('tiempo') || s.includes('capacidad') || s.includes('💼') || s.includes('carga de trabajo') || s.includes('ocupación') || s.includes('carga') && s.includes('trabajo')){
-      const totalHoursWorked = Object.values(latestData.utilization).reduce((sum, u) => sum + u, 0) * 160 / 100 // Assuming 160 hours per month per profile
-      return `Horas trabajadas totales en ${latestData.month}: ${Math.round(totalHoursWorked)} horas.`
+  const utilValues = Object.values(latestData.utilization).filter(v => typeof v === 'number') as number[]
+  const totalHoursWorked = utilValues.reduce((sum, u) => sum + u, 0) * 160 / 100 // Assuming 160 hours per month per profile
+  return `Horas trabajadas totales en ${latestData.month}: ${Math.round(totalHoursWorked)} horas.`
     }
     
     // General overview
-    const profileSummary = Object.entries(latestData.utilization).map(([profile, util]) => `${profile}: ${util}%`).join(', ')
+  const profileSummary = Object.entries(latestData.utilization).map(([profile, util]) => `${profile}: ${typeof util === 'number' ? util : 0}%`).join(', ')
     return `Carga de trabajo en ${latestData.month}: ${profileSummary}.`
   }
 
@@ -500,7 +507,9 @@ function enhanceResponse(question:string, shortAnswer:string){
     const chartData = servicesEvolution.map(m => ({month: m.month, value: m.servicesCount}))
     const svgChart = generateEvolutionChart(chartData, 'Evolución Servicios Prestados')
     
-    core = `${shortAnswer} En detalle, en ${latest.month} hubo ${latest.servicesCount} servicios con ${latest.totalHours}h totales. Los perfiles con más actividad fueron: ${Object.entries(latest.byProfile).sort((a:any,b:any)=> (b[1].services||0)-(a[1].services||0)).slice(0,3).map(([k,v])=>`${k} (${v.services} servicios)`).join(', ')}. Puedo mostrar la evolución por mes o filtrar por perfil si quieres.`
+  const profileEntries = Object.entries(latest.byProfile).map(([k,v])=>[k, v as {services:number; hours:number}] as const)
+  const topProfiles = profileEntries.sort((a,b)=> (b[1].services||0)-(a[1].services||0)).slice(0,3).map(([k,v])=>`${k} (${v.services} servicios)`).join(', ')
+  core = `${shortAnswer} En detalle, en ${latest.month} hubo ${latest.servicesCount} servicios con ${latest.totalHours}h totales. Los perfiles con más actividad fueron: ${topProfiles}. Puedo mostrar la evolución por mes o filtrar por perfil si quieres.`
     
     visual = `${visual}\n\n${svgChart}`
   }
@@ -515,8 +524,9 @@ function enhanceResponse(question:string, shortAnswer:string){
   if(lower.includes('pendientes') || lower.includes('bloquead') || lower.includes('en revisión')){
     const lm = Object.keys(pendingStatsByMonth).pop() || ''
     const stats = pendingStatsByMonth[lm] || { total:0, byStatus:{}, totalEstimatedHours:0 }
-    const topStates = Object.entries((stats as any).byStatus).sort((a:any,b:any)=>b[1]-a[1]).slice(0,3).map(([s,c])=>`${s} (${c})`).join(', ')
-    const statusLines = Object.entries((stats as any).byStatus).map(([s,c])=>`${s.padEnd(12)} | ${String(c).padStart(3)}`).join('\n')
+  const byStatus = stats.byStatus || {}
+  const topStates = Object.entries(byStatus).sort((a,b)=> (b[1] as number) - (a[1] as number)).slice(0,3).map(([s,c])=>`${s} (${c})`).join(', ')
+  const statusLines = Object.entries(byStatus).map(([s,c])=>`${s.padEnd(12)} | ${String(c).padStart(3)}`).join('\n')
     core = `${shortAnswer} Al cierre de ${lm}: ${stats.total} pendientes, ${stats.totalEstimatedHours}h estimadas. Estados principales: ${topStates}. Puedo listar los pendientes filtrando por estado o perfil.`
     visual = statusLines
   }
@@ -538,9 +548,9 @@ function enhanceResponse(question:string, shortAnswer:string){
 
   // Facturación y ANS: añadir contexto y next steps
   if(lower.includes('facturación') || lower.includes('estimación')){
-    const years = (econData as any).years || []
-    const y = years[0] || Object.keys((econData as any).data)[0]
-    const entry = (econData as any).data[String(y)] || {}
+  const years = (econData as unknown as EconomicData).years || []
+  const y = years[0] || Object.keys((econData as unknown as EconomicData).data)[0]
+  const entry = (econData as unknown as EconomicData).data[String(y)] || {}
     const mf = entry.monthlyFacturacion || []
     const spark = mf.length? sparkline(mf) : ''
     core = `${shortAnswer} Si quieres puedo mostrar la serie mensual completa, comparar con la estimación anual o detectar meses atípicos.`
@@ -652,8 +662,10 @@ export default function Chat(){
   // Listen to DOM event dispatched from Sidebar to show welcome cards
   useEffect(()=>{
     function onShow(){ try{ setHistory([]) }catch{ /* ignore */ } }
-    window.addEventListener('td:show-chat-welcome', onShow as any)
-    return ()=>{ window.removeEventListener('td:show-chat-welcome', onShow as any) }
+  // use a simple no-arg listener to avoid EventListener type issues
+  const listener = () => onShow()
+  window.addEventListener('td:show-chat-welcome', listener)
+  return ()=>{ window.removeEventListener('td:show-chat-welcome', listener) }
   }, [])
 
   // also listen to a window event dispatched by Sidebar when user clicks chat option
@@ -696,8 +708,9 @@ export default function Chat(){
       const variants: string[] = []
       variants.push(q)
       variants.push(q.toLowerCase())
-      // strip punctuation
-      variants.push(q.replace(/[¿?¡!.,:;\-()/\-\-]/g,' '))
+  // strip punctuation
+  // replace any punctuation (keep letters/numbers/whitespace and inverted spanish punctuation)
+  variants.push(q.replace(/[^\p{L}\p{N}\s¿¡]/gu, ' '))
       // remove accents (simple replacements)
       const deAccent = (s:string)=>s.replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
       variants.push(deAccent(q))

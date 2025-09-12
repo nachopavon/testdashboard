@@ -1,7 +1,7 @@
 // economicData.ts - final clean implementation
 const years = [2025, 2026, 2027, 2028]
 
-type Requisite = { code: string; description: string; facturacion: number; estimacion: number; month?: number }
+export type Requisite = { code: string; description: string; facturacion: number; estimacion: number; month?: number }
 
 const templates = [
   'Soporte operativo y resolución de incidencias críticas',
@@ -27,7 +27,15 @@ const estRate = 0.12
 const maxReqPerBigYear = 55
 const minReqPerSmallYear = 5
 
-const data: Record<string, any> = {}
+export type EconomicYearData = {
+  monthlyFacturacion: number[]
+  monthlyEstimacion: number[]
+  facturacion: number
+  estimacion: number
+  requisites: Requisite[]
+}
+
+const data: Record<string, EconomicYearData> = {}
 const maxTotal = Math.max(...Object.values(totalsByYear))
 
 years.forEach((y) => {
@@ -166,5 +174,9 @@ years.forEach((y) => {
   data[yearKey] = { monthlyFacturacion: monthlyFacturacionAdjusted, monthlyEstimacion, facturacion, estimacion, requisites }
 })
 
-export default { years, data }
+export type EconomicData = { years: number[]; data: Record<string, EconomicYearData> }
+
+const economicData: EconomicData = { years, data }
+
+export default economicData
 

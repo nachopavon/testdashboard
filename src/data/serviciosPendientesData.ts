@@ -1,14 +1,17 @@
 // Datos sintéticos para Servicios Pendientes
 import { profiles, Profile, months } from './serviciosPrestadosData';
 
+export type PendingStatus = 'Pendiente' | 'En Progreso' | 'Bloqueado' | 'Revisión'
+export type PendingPriority = 'Alta' | 'Media' | 'Baja'
+
 export interface PendingService {
   id: string;
   title: string;
-  status: 'Pendiente' | 'En Progreso' | 'Bloqueado' | 'Revisión';
+  status: PendingStatus;
   category: string;
   area: string;
   assignedProfile: Profile;
-  priority: 'Alta' | 'Media' | 'Baja';
+  priority: PendingPriority;
   estimatedHours: number;
   createdDate: string;
   lastUpdate: string;
@@ -92,8 +95,8 @@ export const pendingServicesByMonth: Record<string, PendingService[]> = months.r
       ...base,
       id: `${month.replace(/\s+/g, '').substring(0, 6)}-${String(i + 1).padStart(2, '0')}`,
       estimatedHours: Math.floor(base.estimatedHours * (0.8 + Math.random() * 0.4)),
-      status: ['Pendiente', 'En Progreso', 'Bloqueado', 'Revisión'][Math.floor(Math.random() * 4)] as any,
-      priority: ['Alta', 'Media', 'Baja'][Math.floor(Math.random() * 3)] as any
+      status: (['Pendiente', 'En Progreso', 'Bloqueado', 'Revisión'] as PendingStatus[])[Math.floor(Math.random() * 4)],
+      priority: (['Alta', 'Media', 'Baja'] as PendingPriority[])[Math.floor(Math.random() * 3)]
     });
   }
   acc[month] = services;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import styles from './AnsDashboard.module.css'
-import ansData from '../../data/ansData'
+import ansData, { Indicator } from '../../data/ansData'
 import Card from '../Card'
 
 type Cat = 'niv'|'dis'|'ons'|'seg'|'cmu'
@@ -64,7 +64,7 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
       cmu: ansData.cmu
     } as const
     const items = categories[category]
-    return items.map(it => ({ id: it.id, code: it.code, title: it.title, value: (it.monthly as any)[monthLabel] ?? 0, target: it.target ?? 0, unit: it.unit })) as MetricItem[]
+  return items.map((it: Indicator) => ({ id: it.id, code: it.code, title: it.title, value: it.monthly?.[monthLabel] ?? 0, target: it.target ?? 0, unit: it.unit })) as MetricItem[]
   }
 
   // Note: we no longer replace category cards with external sampleData metrics

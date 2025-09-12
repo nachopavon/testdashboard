@@ -1,10 +1,10 @@
-type Indicator = {
+export type Indicator = {
   id: string
   code: string
   title: string
   unit?: string
   target?: number
-  monthly: { [month:string]: number }
+  monthly: Record<string, number>
 }
 
 // months from October 2025 through February 2028 (inclusive)
@@ -15,8 +15,11 @@ const months = [
   'enero de 2028','febrero de 2028'
 ]
 
-function genSeries(seed:number, base:number){
-  return months.reduce((acc,m,idx)=>{ acc[m] = Math.max(0, Math.min(100, Math.round((base + Math.sin((seed+idx)/3)*6 + ((seed+idx)%4))*10)/10)); return acc }, {} as any)
+function genSeries(seed:number, base:number): Record<string, number>{
+  return months.reduce((acc,m,idx)=>{
+    acc[m] = Math.max(0, Math.min(100, Math.round((base + Math.sin((seed+idx)/3)*6 + ((seed+idx)%4))*10)/10))
+    return acc
+  }, {} as Record<string, number>)
 }
 
 // NIV indicators (NIV-01..NIV-09) - availability / uptime style
@@ -69,4 +72,15 @@ const cmu: Indicator[] = Array.from({length:4}).map((_,i)=>({
   monthly: genSeries(120+i, i===3? 35 : 85)
 }))
 
-export default { months, niv, dis, ons, seg, cmu }
+export type AnsData = {
+  months: string[]
+  niv: Indicator[]
+  dis: Indicator[]
+  ons: Indicator[]
+  seg: Indicator[]
+  cmu: Indicator[]
+}
+
+const ansData: AnsData = { months, niv, dis, ons, seg, cmu }
+
+export default ansData

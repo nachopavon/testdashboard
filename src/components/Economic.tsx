@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import econData from '../data/economicData'
+import econData, { EconomicYearData, Requisite } from '../data/economicData'
 import styles from './Economic.module.css'
 
 // tiny animated number component (interpolates values)
@@ -42,7 +42,7 @@ export default function Economic(){
   const defaultYear = econData.years.includes(2026) ? String(2026) : String(econData.years[0])
   const [year, setYear] = useState(defaultYear)
   const years = econData.years.map(String)
-  const d = econData.data[year]
+  const d: EconomicYearData = econData.data[year]
 
   // selected month for YTD comparisons (null => show annual)
   const [selectedMonth, setSelectedMonth] = useState<number|null>(null)
@@ -135,16 +135,16 @@ export default function Economic(){
   const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc')
   const [rowsPerPage, setRowsPerPage] = useState(perPage)
 
-  const filtered = d.requisites.filter((r:any)=>{
+  const filtered = d.requisites.filter((r: Requisite)=>{
     if(!search) return true
     const s = search.toLowerCase()
     return String(r.code).toLowerCase().includes(s) || String(r.description).toLowerCase().includes(s)
   })
 
   // if a month is selected, further filter requisites to those assigned to months <= selectedMonth (YTD window)
-  const filteredByMonth = selectedMonth !== null ? filtered.filter((r:any)=> typeof r.month === 'number' ? r.month <= selectedMonth : true) : filtered
+  const filteredByMonth = selectedMonth !== null ? filtered.filter((r: Requisite)=> typeof r.month === 'number' ? (r.month as number) <= selectedMonth : true) : filtered
 
-  const sorted = filteredByMonth.slice().sort((a:any,b:any)=>{
+  const sorted = filteredByMonth.slice().sort((a: Requisite,b: Requisite)=>{
     const dir = sortDir === 'asc' ? 1 : -1
     if(sortBy === 'facturacion' || sortBy === 'estimacion'){
       return (a[sortBy] - b[sortBy]) * dir
@@ -158,8 +158,8 @@ export default function Economic(){
   const start = (currentPage - 1) * rowsPerPage
   const paged = sorted.slice(start, start + rowsPerPage)
 
-  const totalsAll = sorted.reduce((acc:any, r:any)=>{ acc.fact += r.facturacion; acc.est += r.estimacion; return acc }, {fact:0, est:0})
-  const totalsPage = paged.reduce((acc:any, r:any)=>{ acc.fact += r.facturacion; acc.est += r.estimacion; return acc }, {fact:0, est:0})
+  const totalsAll = sorted.reduce((acc:{fact:number, est:number}, r:Requisite)=>{ acc.fact += r.facturacion; acc.est += r.estimacion; return acc }, {fact:0, est:0})
+  const totalsPage = paged.reduce((acc:{fact:number, est:number}, r:Requisite)=>{ acc.fact += r.facturacion; acc.est += r.estimacion; return acc }, {fact:0, est:0})
 
   // export helpers (CSV / JSON)
   function download(filename:string, content:string, mime='text/plain'){
@@ -324,6 +324,9 @@ export default function Economic(){
               const fact = d.monthlyFacturacion[i] || 0
               const hEst = Math.max(12, Math.round((est / maxMonthly) * maxBarHeight))
               const hFact = Math.max(12, Math.round((fact / maxMonthly) * maxBarHeight))
+              const estStyle: React.CSSProperties & Record<string, string | number> = { height: `${hEst}px`, ['--target-height']: `${hEst}px`, animationDelay: `${vi*70}ms`, opacity: showEst?1:0.12 }
+              const factStyle: React.CSSProperties & Record<string, string | number> = { height: `${hFact}px`, ['--target-height']: `${hFact}px`, animationDelay: `${vi*70}ms`, opacity: showFact?1:0.12 }
+
               return (
                 <div key={i} className={`${styles.barItem} ${selectedMonth===i?styles.selectedMonth:''}`}
                   tabIndex={0}
@@ -357,8 +360,8 @@ export default function Economic(){
                     <span className={styles.barValueFact}>{fact.toLocaleString()} €</span>
                   </div>
                   <div className={styles.barGroup} aria-hidden>
-                    <div className={styles.barEst} style={{height: `${hEst}px`, ['--target-height' as any]: `${hEst}px`, animationDelay: `${vi*70}ms`, opacity: showEst?1:0.12}} />
-                    <div className={styles.barFact} style={{height: `${hFact}px`, ['--target-height' as any]: `${hFact}px`, animationDelay: `${vi*70}ms`, opacity: showFact?1:0.12}} />
+                    <div className={styles.barEst} style={estStyle} />
+                    <div className={styles.barFact} style={factStyle} />
                   </div>
                   <div className={styles.barLabel}>{months[i]}</div>
                 </div>
@@ -399,7 +402,7 @@ export default function Economic(){
             </tr>
           </thead>
           <tbody>
-            {paged.map((r:any)=> (
+            {paged.map((r: Requisite)=> (
               <tr key={r.code}><td>{r.code}</td><td>{r.description}</td><td style={{textAlign:'right'}}>{r.facturacion.toLocaleString()} €</td><td style={{textAlign:'right'}}>{r.estimacion.toLocaleString()} €</td></tr>
             ))}
           </tbody>
