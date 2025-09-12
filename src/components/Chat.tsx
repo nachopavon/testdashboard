@@ -489,29 +489,81 @@ function enhanceResponse(question:string, shortAnswer:string){
   if(!shortAnswer || shortAnswer.trim() === '') return 'Lo siento, no tengo información precisa para responder eso en este momento.'
 
   // Simple heuristics to expand responses
-  if(shortAnswer.toLowerCase().includes('servicios')){
-    return `${shortAnswer} Si necesitas, puedo desglosar por perfil, ver la evolución por meses o comparar con meses anteriores. ¿Quieres que muestre alguna de esas vistas?`
+  const lower = shortAnswer.toLowerCase()
+  let core = shortAnswer
+  let visual = ''
+
+  // Servicios prestados: añadir contexto y sugerencias
+  if(lower.includes('servicios')){
+    const latest = servicesEvolution[servicesEvolution.length - 1]
+    const evoVals = servicesEvolution.map(m=>m.servicesCount)
+    visual = sparkline(evoVals)
+    core = `${shortAnswer} En detalle, en ${latest.month} hubo ${latest.servicesCount} servicios con ${latest.totalHours}h totales. Los perfiles con más actividad fueron: ${Object.entries(latest.byProfile).sort((a:any,b:any)=> (b[1].services||0)-(a[1].services||0)).slice(0,3).map(([k,v])=>`${k} (${v.services} servicios)`).join(', ')}. Puedo mostrar la evolución por mes o filtrar por perfil si quieres.`
   }
 
-  if(shortAnswer.toLowerCase().includes('horas')){
-    return `${shortAnswer} Esta cifra es una agregación estimada basada en los registros del mes. Puedo desglosarla por perfil o por tipo de servicio si lo prefieres.`
+  // Horas totales o métricas de tiempo
+  if(lower.includes('horas')){
+    const latest = servicesEvolution[servicesEvolution.length - 1]
+    core = `${shortAnswer} Esa cifra corresponde al mes de ${latest.month}. Si necesitas, puedo desglosar las horas por perfil o comparar con meses anteriores para ver tendencias.`
   }
 
-  if(shortAnswer.toLowerCase().includes('pendientes') || shortAnswer.toLowerCase().includes('bloquead') || shortAnswer.toLowerCase().includes('en revisión')){
-    return `${shortAnswer} Puedo proporcionar una lista más detallada de los elementos pendientes o filtrar por estado o perfil para priorizar acciones.`
+  // Servicios pendientes: dar resumen y top estados
+  if(lower.includes('pendientes') || lower.includes('bloquead') || lower.includes('en revisión')){
+    const lm = Object.keys(pendingStatsByMonth).pop() || ''
+    const stats = pendingStatsByMonth[lm] || { total:0, byStatus:{}, totalEstimatedHours:0 }
+    const topStates = Object.entries((stats as any).byStatus).sort((a:any,b:any)=>b[1]-a[1]).slice(0,3).map(([s,c])=>`${s} (${c})`).join(', ')
+    const statusLines = Object.entries((stats as any).byStatus).map(([s,c])=>`${s.padEnd(12)} | ${String(c).padStart(3)}`).join('\n')
+    core = `${shortAnswer} Al cierre de ${lm}: ${stats.total} pendientes, ${stats.totalEstimatedHours}h estimadas. Estados principales: ${topStates}. Puedo listar los pendientes filtrando por estado o perfil.`
+    visual = statusLines
   }
 
-  if(shortAnswer.toLowerCase().includes('utilización') || shortAnswer.toLowerCase().includes('carga')){
-    return `${shortAnswer} La utilización indica cuánto de la capacidad disponible se está empleando; si quieres puedo mostrar proyecciones o identificar perfiles con sobrecarga.`
+  // Carga de trabajo / utilización
+  if(lower.includes('utilización') || lower.includes('carga') || lower.includes('ocupación')){
+    const latest = workloadData[workloadData.length-1]
+    const avg = Math.round(Object.values(latest.utilization).reduce((s,n)=>s+n,0)/Object.values(latest.utilization).length)
+    const over = Object.entries(latest.utilization).filter(([,v])=>v > avg+10).map(([p])=>p)
+    const bars = Object.entries(latest.utilization).map(([p,v])=>`${p.padEnd(3)} ${bar(v,100)} ${v}%`).join('\n')
+    core = `${shortAnswer} En ${latest.month} la utilización media fue ${avg}%. Perfiles con sobreutilización: ${over.length? over.join(', '): 'ninguno claramente destacado'}. Puedo ofrecer proyecciones o un desglose por perfil.`
+    visual = bars
   }
 
-  if(shortAnswer.toLowerCase().includes('facturación') || shortAnswer.toLowerCase().includes('estimación')){
-    return `${shortAnswer} Puedo también mostrar la evolución mensual o comparar contra la estimación anual si te interesa.`
+  // Facturación y ANS: añadir contexto y next steps
+  if(lower.includes('facturación') || lower.includes('estimación')){
+    const years = (econData as any).years || []
+    const y = years[0] || Object.keys((econData as any).data)[0]
+    const entry = (econData as any).data[String(y)] || {}
+    const mf = entry.monthlyFacturacion || []
+    const spark = mf.length? sparkline(mf) : ''
+    core = `${shortAnswer} Si quieres puedo mostrar la serie mensual completa, comparar con la estimación anual o detectar meses atípicos.`
+    visual = spark
   }
 
-  // Fallback: add a short clarifying sentence
-  return `${shortAnswer} Si quieres más detalle, pregunta por desglose por perfil, por mes o por estado.`
+  if(lower.includes('ans') || lower.includes('indicador') || lower.includes('niv') || lower.includes('dis')){
+    core = `${shortAnswer} Puedo desglosar por indicador, mostrar el top de cumplimiento o generar un ranking por cumplimiento respecto al objetivo.`
+  }
+
+  // Fallback: añadir una pregunta de seguimiento
+  if(!core || core.trim()==='') core = `${shortAnswer} ¿Te interesa un desglose por perfil, por mes o por estado? Puedo prepararlo.`
+
+  return `${core}${visual ? '\n\n' + visual : ''}`
 }
+
+// Small ASCII/symbol helpers
+function sparkline(values:number[]){
+  if(!values || values.length===0) return ''
+  const blocks = ['▁','▂','▃','▄','▅','▆','▇','█']
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  return values.map(v => blocks[Math.floor((v - min) / range * (blocks.length - 1))]).join('')
+}
+
+function bar(value:number, max:number){
+  const total = 8
+  const filled = Math.round((value / (max || value || 1)) * total)
+  return '█'.repeat(filled) + '░'.repeat(Math.max(0, total - filled))
+}
+
 
 export default function Chat(){
   const [input, setInput] = useState('')
@@ -556,6 +608,13 @@ export default function Chat(){
         sessionStorage.removeItem('td_show_chat_welcome')
       }
     }catch(e){}
+  }, [])
+
+  // also listen to a window event dispatched by Sidebar when user clicks chat option
+  useEffect(()=>{
+    const handler = () => { try{ setHistory([]); sessionStorage.removeItem('td_show_chat_welcome') }catch(e){} }
+    window.addEventListener('td_show_chat_welcome', handler)
+    return ()=> window.removeEventListener('td_show_chat_welcome', handler)
   }, [])
 
   function send(){
@@ -603,8 +662,9 @@ export default function Chat(){
         const tryA = answerFromData(v)
         if(tryA && tryA.trim() !== ''){ a = tryA; break }
       }
-      if(!a) a = 'Lo siento, no tengo datos exactos para esa pregunta.'
-      setHistory(h => [{from:'bot', text: a}, ...h])
+  if(!a) a = 'Lo siento, no tengo datos exactos para esa pregunta.'
+  try{ a = enhanceResponse(q, a) }catch(e){}
+  setHistory(h => [{from:'bot', text: a}, ...h])
       setLoading(false)
       if(panelRef.current) panelRef.current.scrollTop = 0
     }, 600)

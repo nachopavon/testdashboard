@@ -110,8 +110,8 @@ export default function Sidebar({
 
         <button
           className={`${styles.navBtn} ${view==='chat'?styles.btnActive:''}`}
-          onClick={() => { try{ sessionStorage.setItem('td_show_chat_welcome','1') }catch(e){}; onChange('chat') }}
-          onKeyDown={(e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); try{ sessionStorage.setItem('td_show_chat_welcome','1') }catch(e){}; onChange('chat') } }}
+          onClick={() => { try{ sessionStorage.setItem('td_show_chat_welcome','1') }catch(e){}; try{ window.dispatchEvent(new Event('td_show_chat_welcome')) }catch(e){}; onChange('chat') }}
+          onKeyDown={(e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); try{ sessionStorage.setItem('td_show_chat_welcome','1') }catch(e){}; try{ window.dispatchEvent(new Event('td_show_chat_welcome')) }catch(e){}; onChange('chat') } }}
           aria-pressed={view==='chat'}
           title="Chat sobre datos"
         >
