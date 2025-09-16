@@ -1,0 +1,63 @@
+/* Layout basics */
+.page{ padding:18px; display:flex; justify-content:center }
+.container{ width:100%; max-width:1100px }
+
+/* Big chart area */
+.bigChart {
+	background: var(--card-bg);
+	border-radius: var(--junta-radius);
+	padding: 14px;
+	box-shadow: var(--card-shadow);
+	margin-top: 18px;
+}
+.chartLegend {
+	position: absolute;
+	right: 12px;
+	top: 8px;
+	display:flex;
+	gap:10px;
+	align-items:center;
+}
+.chartLegendItem { display:inline-flex; gap:8px; align-items:center; font-size:13px; color:var(--muted) }
+.legendSwatch { width:12px; height:12px; border-radius:3px; display:inline-block }
+.chartSvg { width:100%; height:260px; display:block }
+.chartLine { stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 900ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease; stroke-linecap:round }
+.drawn { stroke-dashoffset: 0 !important }
+.anim { transform: translateY(-6px); transition: transform 360ms cubic-bezier(.2,.9,.2,1) }
+.tooltipRich {
+	background: white;
+	border-radius: 6px;
+	box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+	padding: 10px 12px;
+	border: 1px solid rgba(15,23,42,0.04);
+	min-width: 120px;
+}
+
+/* Grid/cards */
+.grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 18px }
+.card{ background:var(--card-bg); border-radius:var(--junta-radius); padding:14px; box-shadow:var(--card-shadow) }
+.sectionTitle{ font-size:13px; color:var(--muted); margin:0 0 8px }
+.bigStat{ font-size:34px; font-weight:700 }
+.smallNote{ font-size:12px; color:var(--muted) }
+.pieWrap{ display:flex; gap:12px; align-items:center }
+.pctBig{ font-size:28px; font-weight:800 }
+.spark{ width:100%; height:48px }
+.legend{ display:flex; gap:10px; align-items:center; font-size:13px }
+.legendSwatch{ width:12px; height:8px; border-radius:2px }
+
+/* Metrics */
+.metricRow { display:flex; gap:12px; align-items:center }
+.metricEmph { font-size:22px; font-weight:700 }
+.barWrap { background:#f1f5f9; height:10px; border-radius:999px; overflow:hidden }
+.barFill { height:100%; background:#2563eb; transition: width 520ms cubic-bezier(.2,.9,.2,1) }
+
+/* small spark */
+.spark { width:100%; height:48px }
+
+/* Points in spark */
+.point { stroke: transparent; transition: transform 220ms cubic-bezier(.2,.9,.2,1), r 220ms; cursor: pointer }
+.point:hover, .point:focus { transform: scale(1.25); stroke: rgba(37,99,235,0.15); r:8 }
+.point:focus { outline: none }
+
+/* make svg elements crisp on high-dpi */
+.chartSvg, .spark { shape-rendering: geometricPrecision }

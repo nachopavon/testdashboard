@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import styles from './Sidebar.module.css'
 
-type ViewKey = 'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'|'gcb-03'|'gpr-04'|'gco-05'|'capacidad'
+type ViewKey = 'ans'|'econ'|'chat'|'demanda'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'|'gcb-03'|'gpr-04'|'gco-05'|'capacidad'
 type Props = {
   view: ViewKey
   onChange: (v:ViewKey)=>void
@@ -58,6 +58,8 @@ export default function Sidebar({
           <span className={styles.label}>Seguimiento económico</span>
           <span className={styles.badge} aria-hidden>{econCount}</span>
         </button>
+
+        
         <button
           className={`${styles.navBtn} ${view==='ans'?styles.btnActive:''}`}
           onClick={()=>onChange('ans')}
@@ -170,6 +172,19 @@ export default function Sidebar({
           <span className={styles.badge} aria-hidden>{capacidadCount}</span>
         </button>
         <button
+          className={`${styles.navBtn} ${view==='demanda'?styles.btnActive:''}`}
+          onClick={()=>onChange('demanda')}
+          onKeyDown={(e)=>handleKeyClick(e,'demanda')}
+          aria-pressed={view==='demanda'}
+          title="Gestión Demanda"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 12h18M6 6v12M18 6v12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className={styles.label}>Gestión Demanda</span>
+          <span className={styles.badge} aria-hidden>0</span>
+        </button>
+        <button
           className={`${styles.navBtn} ${view==='chat'?styles.btnActive:''}`}
           onClick={() => { try{ sessionStorage.setItem('td_show_chat_welcome','1'); window.dispatchEvent(new CustomEvent('td:show-chat-welcome')) }catch{ /* ignore */ } onChange('chat') }}
           onKeyDown={(e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); try{ sessionStorage.setItem('td_show_chat_welcome','1'); window.dispatchEvent(new CustomEvent('td:show-chat-welcome')) }catch{ /* ignore */ } onChange('chat') } }}
@@ -180,7 +195,6 @@ export default function Sidebar({
             <path d="M4 4h16v12H7l-3 3V4z" fill="currentColor" />
           </svg>
           <span className={styles.label}>Chat datos</span>
-          <span className={styles.badge} aria-hidden>{chatCount}</span>
         </button>
         
       </nav>

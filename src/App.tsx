@@ -13,15 +13,16 @@
     import Gpr04 from './components/Gpr04'
     import Gco05 from './components/Gco05'
     import Capacidad from './components/Capacidad'
+    import Demanda from './components/Demanda'
     import econData from './data/economicData'
     import styles from './App.module.css'
 
     export default function App(){
       const [filters, setFilters] = useState({ month: dataMonths[0], lote: 'Lote 2', req: dataReqs[0] })
-      const [view, setView] = useState<'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'|'gcb-03'|'gpr-04'|'gco-05'|'capacidad'>(() => {
+  const [view, setView] = useState<'ans'|'econ'|'chat'|'demanda'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'|'gcb-03'|'gpr-04'|'gco-05'|'capacidad'>(() => {
         try {
           const v = localStorage.getItem('td_view');
-          const validViews: readonly string[] = ['ans','econ','chat','servicios-prestados','servicios-pendientes','carga-trabajo','gcb-03','gpr-04','gco-05'];
+          const validViews: readonly string[] = ['ans','econ','chat','demanda','servicios-prestados','servicios-pendientes','carga-trabajo','gcb-03','gpr-04','gco-05'];
           return validViews.includes(v || '') ? v as 'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'|'gcb-03'|'gpr-04'|'gco-05' : 'econ';
         } catch {
           return 'econ';
@@ -30,7 +31,7 @@
 
       useEffect(()=>{ try{ localStorage.setItem('td_view', view) }catch{ /* ignore */ } }, [view])
 
-      const metrics = sampleData.data[filters.month][filters.req]
+  const metrics = sampleData.data[filters.month][filters.req]
 
 
       // counts for sidebar badges
@@ -69,6 +70,8 @@
               </>
             ) : view === 'econ' ? (
               <Economic />
+            ) : view === 'demanda' ? (
+              <Demanda />
             ) : view === 'chat' ? (
               <Chat />
             ) : view === 'servicios-prestados' ? (
