@@ -1,0 +1,61 @@
+/* Page container */
+.page{
+  padding: 20px;
+  max-width: var(--content-width);
+  margin: 0 auto;
+}
+
+/* Row layout similar to other pages */
+.row{ display:flex; gap:16px; align-items:flex-start; margin-bottom:16px }
+
+/* Card style consistent with Card.module.css */
+.card{
+  background:var(--card-bg);
+  border-radius:var(--junta-radius);
+  padding:18px;
+  min-height:120px;
+  box-shadow:var(--card-shadow);
+  border:1px solid var(--ui-border);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  transition:transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.card:hover{ transform:translateY(-4px); box-shadow:0 16px 32px rgba(11,42,59,0.06) }
+
+.gaugeWrap{ display:flex; justify-content:center; align-items:center; height:120px }
+.gauge{ width:100%; height:100% }
+.gaugeLabel{ font-size:28px; fill:var(--text); font-weight:800 }
+.gaugeSub{ font-size:14px; fill:var(--muted); margin-top:4px }
+
+.knob{ filter: drop-shadow(0 3px 6px rgba(2,6,23,0.12)); }
+
+.gaugeWrap{ display:flex; justify-content:center; align-items:center; height:150px }
+
+.yellow{ width:28px; height:28px; border-radius:50%; background:#f59e0b }
+
+.timelineItem{ margin:6px 0 }
+.timelineBtn{ background:transparent; border:1px solid transparent; width:100%; text-align:left; padding:8px; display:flex; gap:10px; align-items:center; border-radius:6px }
+.timelineBtn:hover, .timelineBtn[aria-pressed="true"]{ background:rgba(59,130,246,0.06); border-color:rgba(59,130,246,0.12) }
+.timelineDate{ font-weight:700; width:90px; color:var(--muted) }
+.timelineText{ color:var(--text) }
+
+.eventDetail{ margin-top:12px; padding:12px; background:var(--surface-elevated); border-radius:8px; border:1px solid var(--ui-border) }
+
+.stackRow{ display:flex; align-items:center; gap:8px; margin-bottom:8px }
+.stackLabel{ width:110px; font-size:13px; color:var(--muted) }
+.stackBarBg{ background:var(--surface-elevated); flex:1; height:14px; border-radius:8px; overflow:hidden; border:1px solid var(--ui-border) }
+.stackBarFill{ background:linear-gradient(90deg,#60a5fa,#3b82f6); height:100% }
+.stackVal{ width:48px; text-align:right; color:var(--text) }
+
+.semaforo{ display:flex; align-items:center; gap:12px; padding:12px }
+.green{ width:28px; height:28px; border-radius:50%; background:#16a34a }
+.red{ width:28px; height:28px; border-radius:50%; background:#ef4444 }
+.semaforoLabel{ font-weight:700 }
+
+.timeline{ list-style:none; padding:0; margin:0 }
+.timeline li{ padding:8px 0; border-bottom:1px dashed rgba(0,0,0,0.06); color:var(--text) }
+
+.sectionTitle{ font-size:16px; font-weight:800; color:var(--text); margin:0 0 8px 0 }
+
+.tooltip{ position:fixed; pointer-events:none; background:rgba(2,6,23,0.95); color:#fff; padding:8px 10px; border-radius:6px; font-size:13px; box-shadow:0 6px 18px rgba(2,6,23,0.18) }

@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import styles from './Sidebar.module.css'
 
+type ViewKey = 'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'|'gcb-03'|'gpr-04'|'gco-05'|'capacidad'
 type Props = {
-  view: 'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'
-  onChange: (v:'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo')=>void
+  view: ViewKey
+  onChange: (v:ViewKey)=>void
   ansCount?: number
   econCount?: number
   serviciosCount?: number
   pendientesCount?: number
   cargaCount?: number
+  gcbCount?: number
+  gprCount?: number
+  gcoCount?: number
+  capacidadCount?: number
+  chatCount?: number
 }
 
 export default function Sidebar({
@@ -19,6 +25,7 @@ export default function Sidebar({
   serviciosCount=0,
   pendientesCount=0,
   cargaCount=0
+  ,gcbCount=0,gprCount=0,gcoCount=0,capacidadCount=0,chatCount=0
 }:Props){
   const [collapsed, setCollapsed] = useState(()=>{
     try{ return localStorage.getItem('td_sidebar_collapsed') === '1' }catch{ return false }
@@ -26,7 +33,7 @@ export default function Sidebar({
 
   useEffect(()=>{ try{ localStorage.setItem('td_sidebar_collapsed', collapsed ? '1' : '0') }catch{ /* ignore */ } }, [collapsed])
 
-  function handleKeyClick(event:React.KeyboardEvent, v:'ans'|'econ'|'chat'|'servicios-prestados'|'servicios-pendientes'|'carga-trabajo'){
+  function handleKeyClick(event:React.KeyboardEvent, v: ViewKey){
     if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); onChange(v) }
   }
 
@@ -51,7 +58,6 @@ export default function Sidebar({
           <span className={styles.label}>Seguimiento económico</span>
           <span className={styles.badge} aria-hidden>{econCount}</span>
         </button>
-
         <button
           className={`${styles.navBtn} ${view==='ans'?styles.btnActive:''}`}
           onClick={()=>onChange('ans')}
@@ -108,6 +114,61 @@ export default function Sidebar({
           <span className={styles.badge} aria-hidden>{cargaCount}</span>
         </button>
 
+        {/* New management dashboards */}
+        <button
+          className={`${styles.navBtn} ${view==='gcb-03'?styles.btnActive:''}`}
+          onClick={()=>onChange('gcb-03')}
+          onKeyDown={(e)=>handleKeyClick(e,'gcb-03')}
+          aria-pressed={view==='gcb-03'}
+          title="Gestión del Cambio"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M12 2v6l4 2-4 2v6l-4-2v-6L8 10l4-2V2z" fill="currentColor" />
+          </svg>
+          <span className={styles.label}>Gestión Cambio GCB</span>
+          <span className={styles.badge} aria-hidden>{gcbCount}</span>
+        </button>
+
+        <button
+          className={`${styles.navBtn} ${view==='gpr-04'?styles.btnActive:''}`}
+          onClick={()=>onChange('gpr-04')}
+          onKeyDown={(e)=>handleKeyClick(e,'gpr-04')}
+          aria-pressed={view==='gpr-04'}
+          title="Gestión Problemas y Riesgos"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 13h4v8H3zM10 7h4v14h-4zM17 3h4v18h-4z" fill="currentColor" />
+          </svg>
+          <span className={styles.label}>Gestión Problemas y Riesgos GPR</span>
+          <span className={styles.badge} aria-hidden>{gprCount}</span>
+        </button>
+
+        <button
+          className={`${styles.navBtn} ${view==='gco-05'?styles.btnActive:''}`}
+          onClick={()=>onChange('gco-05')}
+          onKeyDown={(e)=>handleKeyClick(e,'gco-05')}
+          aria-pressed={view==='gco-05'}
+          title="Gestión Conocimiento"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M12 2a10 10 0 100 20 10 10 0 000-20zM7 10h10M7 14h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className={styles.label}>Gestion Conocimiento GCO</span>
+          <span className={styles.badge} aria-hidden>{gcoCount}</span>
+        </button>
+        <button
+          className={`${styles.navBtn} ${view==='capacidad'?styles.btnActive:''}`}
+          onClick={()=>onChange('capacidad')}
+          onKeyDown={(e)=>handleKeyClick(e,'capacidad')}
+          aria-pressed={view==='capacidad'}
+          title="Gestión Capacidad"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 12h18M6 6v12M18 6v12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className={styles.label}>Gestión Capacidad</span>
+          <span className={styles.badge} aria-hidden>{capacidadCount}</span>
+        </button>
         <button
           className={`${styles.navBtn} ${view==='chat'?styles.btnActive:''}`}
           onClick={() => { try{ sessionStorage.setItem('td_show_chat_welcome','1'); window.dispatchEvent(new CustomEvent('td:show-chat-welcome')) }catch{ /* ignore */ } onChange('chat') }}
@@ -119,7 +180,9 @@ export default function Sidebar({
             <path d="M4 4h16v12H7l-3 3V4z" fill="currentColor" />
           </svg>
           <span className={styles.label}>Chat datos</span>
+          <span className={styles.badge} aria-hidden>{chatCount}</span>
         </button>
+        
       </nav>
 
       <div className={styles.footer}>Junta de Andalucía</div>

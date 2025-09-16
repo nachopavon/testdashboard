@@ -1,0 +1,5 @@
+.filtersBar{ display:flex; gap:12px; align-items:center; padding:12px; background:var(--card-bg); border-radius:var(--junta-radius); border:1px solid var(--ui-border); box-shadow:var(--card-shadow); margin-bottom:16px }
+.filterGroup{ display:flex; flex-direction:column; gap:6px }
+.filterLabel{ font-size:12px; color:var(--muted); font-weight:700 }
+.filterSelect{ padding:8px 10px; border-radius:8px; border:1px solid var(--ui-border); background:var(--bg); color:var(--text); min-width:140px }
+.srOnly{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
