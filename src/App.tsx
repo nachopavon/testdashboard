@@ -31,6 +31,90 @@
 
       useEffect(()=>{ try{ localStorage.setItem('td_view', view) }catch{ /* ignore */ } }, [view])
 
+      // Dev-only global instrumentation: watch for mutations to <html> and <body>, and wrap setProperty/appendChild
+      useEffect(()=>{
+        if(typeof window === 'undefined') return
+        try{
+          // only run instrumentation on local/dev hosts to reduce noise
+          const hn = typeof location !== 'undefined' ? (location.hostname || '') : ''
+          if(hn && !(hn === 'localhost' || hn === '127.0.0.1' || hn.endsWith('.local'))) return
+        }catch(e){ /* ignore */ }
+
+        // wrap setProperty to catch global CSS variable changes
+        const proto = (CSSStyleDeclaration as any).prototype as any
+        const origSet = proto && proto.setProperty
+        if(origSet && !(window as any).__td_global_setProperty_orig){
+          (window as any).__td_global_setProperty_orig = origSet
+          proto.setProperty = function(name: string, value: string, priority?: string){
+            try{
+              if(typeof name === 'string' && (name.indexOf('--nav') !== -1 || name.indexOf('background') !== -1 || name.indexOf('--target-height')!==-1)){
+                const stack = (new Error()).stack || ''
+                // eslint-disable-next-line no-console
+                console.warn('[td-global] setProperty', { name, value, stack: stack.split('\n').slice(2,8).join('\n') })
+              }
+            }catch(e){}
+            return origSet.apply(this, arguments as any)
+          }
+        }
+
+        // observe attribute changes on <html> and <body>
+        const roots: (Element | null)[] = [document.documentElement, document.body]
+        const observers: MutationObserver[] = []
+        try{
+          for(const r of roots){
+            if(!r) continue
+            const mo = new MutationObserver((recs)=>{
+              for(const rec of recs){
+                try{
+                  if(rec.type === 'attributes'){
+                    const name = rec.attributeName
+                    const val = name ? (r.getAttribute(name) || '') : ''
+                    const stack = (new Error()).stack || ''
+                    // eslint-disable-next-line no-console
+                    console.warn('[td-global] attr-change', { node: r.nodeName, attribute: name, value: val, stack: stack.split('\n').slice(2,8).join('\n') })
+                  } else if(rec.type === 'childList'){
+                    // log added/removed nodes count
+                    const stack = (new Error()).stack || ''
+                    // eslint-disable-next-line no-console
+                    console.warn('[td-global] childList change', { node: r.nodeName, added: rec.addedNodes.length, removed: rec.removedNodes.length, stack: stack.split('\n').slice(2,8).join('\n') })
+                  }
+                }catch(e){/* ignore */}
+              }
+            })
+            mo.observe(r, { attributes: true, childList: true, subtree: false, attributeOldValue: true })
+            observers.push(mo)
+          }
+        }catch(e){/* ignore */}
+
+        // wrap appendChild to detect nodes appended to body
+        const origAppend = Node.prototype.appendChild
+        if(!(window as any).__td_orig_appendChild){
+          (window as any).__td_orig_appendChild = origAppend
+          Node.prototype.appendChild = function<T extends Node>(this: Node, newChild: T): T{
+            try{
+              if(this === document.body || this === document.documentElement){
+                const stack = (new Error()).stack || ''
+                // eslint-disable-next-line no-console
+                console.warn('[td-global] appendChild to', this.nodeName, { node: newChild && (newChild as any).nodeName, stack: stack.split('\n').slice(2,8).join('\n') })
+              }
+            }catch(e){}
+            return (window as any).__td_orig_appendChild.apply(this, arguments as any)
+          }
+        }
+
+        return ()=>{
+          try{
+            if((window as any).__td_global_setProperty_orig){
+              const proto2 = (CSSStyleDeclaration as any).prototype as any
+              proto2.setProperty = (window as any).__td_global_setProperty_orig
+              delete (window as any).__td_global_setProperty_orig
+            }
+          }catch(e){}
+          try{ observers.forEach(o=>o.disconnect()) }catch(e){}
+          try{ if((window as any).__td_orig_appendChild){ Node.prototype.appendChild = (window as any).__td_orig_appendChild; delete (window as any).__td_orig_appendChild } }catch(e){}
+        }
+      }, [])
+
   const metrics = sampleData.data[filters.month][filters.req]
 
 

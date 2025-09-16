@@ -33,12 +33,92 @@ export default function Sidebar({
 
   useEffect(()=>{ try{ localStorage.setItem('td_sidebar_collapsed', collapsed ? '1' : '0') }catch{ /* ignore */ } }, [collapsed])
 
+  // instrumentation: log computed background to help detect runtime mutations
+  useEffect(()=>{
+    try{
+      const el = document.querySelector('aside[aria-label="Navegación principal"]') as HTMLElement | null
+      if(!el) return
+      const cs = getComputedStyle(el)
+      // log background properties (background & background-image) when view changes
+      // this helps detect if any component modifies CSS variables or inline styles at runtime
+      // eslint-disable-next-line no-console
+      console.debug('[td-debug] sidebar background:', { view, background: cs.background, backgroundImage: cs.backgroundImage })
+    }catch(e){ /* ignore */ }
+  }, [view])
+
+  // Dev-only: observe mutations on the aside and wrap setProperty to capture stacks for relevant changes
+  useEffect(()=>{
+    if(typeof window === 'undefined') return
+    try{
+      const isProd = (process && (process.env as any)?.NODE_ENV) === 'production'
+      if(isProd) return
+    }catch(e){ /* ignore */ }
+
+    let origSetProperty: ((name: string, value: string, priority?: string) => void) | undefined
+    let patched = false
+    const el = document.querySelector('aside[aria-label="Navegación principal"]') as HTMLElement | null
+    if(el){
+      const mo = new MutationObserver((records)=>{
+        for(const r of records){
+          try{
+            if(r.type === 'attributes'){
+              const attr = r.attributeName
+              const val = attr ? el.getAttribute(attr) : null
+              // capture a stack to help find the origin
+              const stack = (new Error()).stack || ''
+              // eslint-disable-next-line no-console
+              console.warn('[td-debug] aside mutation', { attribute: attr, value: val, computedBackground: getComputedStyle(el).background, stack: stack.split('\n').slice(2,8).join('\n') })
+            }
+          }catch(e){/* ignore */}
+        }
+      })
+      try{ mo.observe(el, { attributes: true, attributeFilter: ['style','class'] }) }catch(e){/* ignore */}
+
+      // wrapper for setProperty that only logs relevant names (nav vars or background)
+      try{
+        const proto = (CSSStyleDeclaration as any).prototype as any
+        if(proto && !((window as any).__td_setProperty_orig)){
+          origSetProperty = proto.setProperty
+          (window as any).__td_setProperty_orig = origSetProperty
+          proto.setProperty = function(name: string, value: string, priority?: string){
+            try{
+              if(typeof name === 'string' && (name.indexOf('--nav') !== -1 || name.indexOf('background') !== -1)){
+                const stack = (new Error()).stack || ''
+                // eslint-disable-next-line no-console
+                console.warn('[td-debug] setProperty (sidebar-watch) called:', { name, value, priority, stack: stack.split('\n').slice(2,8).join('\n') })
+              }
+            }catch(e){/* ignore */}
+            return origSetProperty.apply(this, arguments as any)
+          }
+          patched = true
+        }
+      }catch(e){ /* ignore */ }
+
+      return ()=>{
+        try{ mo.disconnect() }catch(e){}
+        if(patched){
+          try{
+            const proto = (CSSStyleDeclaration as any).prototype as any
+            const orig = (window as any).__td_setProperty_orig
+            if(proto && orig) proto.setProperty = orig
+            delete (window as any).__td_setProperty_orig
+          }catch(e){/* ignore */}
+        }
+      }
+    }
+  }, [])
+
   function handleKeyClick(event:React.KeyboardEvent, v: ViewKey){
     if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); onChange(v) }
   }
 
   return (
-    <aside className={`${styles.sidebar} ${collapsed?styles.collapsed:''}`} aria-label="Navegación principal">
+    <aside
+        className={`${styles.sidebar} ${collapsed?styles.collapsed:''}`}
+        aria-label="Navegación principal"
+        // defensive inline style: ensures sidebar background cannot be overridden by runtime CSS variable changes
+        style={{ background: 'linear-gradient(180deg, #2f8b58, #0b5fa5)' }}
+      >
       <div className={styles.topRow}>
         <div className={styles.logo} title="Cuadro de Mandos Unificado">Cuadro de Mandos Unificado</div>
         <button className={styles.collapseBtn} aria-label={collapsed? 'Abrir menú':'Cerrar menú'} onClick={()=>setCollapsed(c=>!c)}>{collapsed? '›':'‹'}</button>

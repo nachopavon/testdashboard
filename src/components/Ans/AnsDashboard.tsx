@@ -3,7 +3,7 @@ import styles from './AnsDashboard.module.css'
 import ansData, { Indicator } from '../../data/ansData'
 import Card from '../Card'
 
-type Cat = 'niv'|'dis'|'ons'|'seg'|'cmu'
+type Cat = 'niv'|'dis'|'ges'|'seg'|'cal'|'inn'|'val'|'ons'
 
 type MetricItem = {
   id: string
@@ -59,9 +59,12 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
     const categories = {
       niv: ansData.niv,
       dis: ansData.dis,
-      ons: ansData.ons,
+      ges: ansData.ges,
       seg: ansData.seg,
-      cmu: ansData.cmu
+      cal: ansData.cal,
+      inn: ansData.inn,
+      val: ansData.val,
+      ons: (ansData as any).ons || []
     } as const
     const items = categories[category]
   return items.map((it: Indicator) => ({ id: it.id, code: it.code, title: it.title, value: it.monthly?.[monthLabel] ?? 0, target: it.target ?? 0, unit: it.unit })) as MetricItem[]
@@ -107,9 +110,12 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
         <div className={styles.tabs} role="tablist" aria-label="Categorías ANS">
           <button className={`${styles.tab} ${cat === 'niv' ? styles.tabActive : ''}`} onClick={() => setCat('niv')} role="tab" aria-selected={cat === 'niv'}>NIV</button>
           <button className={`${styles.tab} ${cat === 'dis' ? styles.tabActive : ''}`} onClick={() => setCat('dis')} role="tab" aria-selected={cat === 'dis'}>DIS</button>
-          <button className={`${styles.tab} ${cat === 'ons' ? styles.tabActive : ''}`} onClick={() => setCat('ons')} role="tab" aria-selected={cat === 'ons'}>ONS</button>
+          <button className={`${styles.tab} ${cat === 'ges' ? styles.tabActive : ''}`} onClick={() => setCat('ges')} role="tab" aria-selected={cat === 'ges'}>GES</button>
           <button className={`${styles.tab} ${cat === 'seg' ? styles.tabActive : ''}`} onClick={() => setCat('seg')} role="tab" aria-selected={cat === 'seg'}>SEG</button>
-          <button className={`${styles.tab} ${cat === 'cmu' ? styles.tabActive : ''}`} onClick={() => setCat('cmu')} role="tab" aria-selected={cat === 'cmu'}>CMU</button>
+          <button className={`${styles.tab} ${cat === 'cal' ? styles.tabActive : ''}`} onClick={() => setCat('cal')} role="tab" aria-selected={cat === 'cal'}>CAL</button>
+          <button className={`${styles.tab} ${cat === 'inn' ? styles.tabActive : ''}`} onClick={() => setCat('inn')} role="tab" aria-selected={cat === 'inn'}>INN</button>
+          <button className={`${styles.tab} ${cat === 'val' ? styles.tabActive : ''}`} onClick={() => setCat('val')} role="tab" aria-selected={cat === 'val'}>VAL</button>
+          <button className={`${styles.tab} ${cat === 'ons' ? styles.tabActive : ''}`} onClick={() => setCat('ons')} role="tab" aria-selected={cat === 'ons'}>ONS</button>
         </div>
       </div>
 
