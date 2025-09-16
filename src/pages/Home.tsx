@@ -3,7 +3,7 @@ import styles from './Home.module.css'
 
 export default function Home(){
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} panelContainer`}>
       <aside className={styles.leftCol}>
         <div className={styles.panel}> 
           <h3 className={styles.panelTitle}>Panel Principal</h3>

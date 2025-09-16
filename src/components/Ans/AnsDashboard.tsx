@@ -102,7 +102,7 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
   const cardItems = adjustToGoal(baseItems, 0.9)
 
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} panelContainer`}>
       <div className={styles.controls}>
         <div className={styles.tabs} role="tablist" aria-label="Categorías ANS">
           <button className={`${styles.tab} ${cat === 'niv' ? styles.tabActive : ''}`} onClick={() => setCat('niv')} role="tab" aria-selected={cat === 'niv'}>NIV</button>

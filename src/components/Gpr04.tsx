@@ -40,7 +40,7 @@ export default function Gpr04(){
   })
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} panelContainer`}>
       <h2>GESTIÓN PROBLEMAS Y RIESGOS (GPR-04)</h2>
 
       <PanelFilters period={filters.period} area={filters.area} kind={filters.kind} responsible={filters.responsible} onChange={(next)=>setFilters(prev=>({...prev,...next}))} />

@@ -67,7 +67,7 @@ export default function Capacidad(): React.ReactElement {
   }, [])
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} panelContainer`}>
       <div className={styles.container}>
         <h2 style={{textAlign:'center'}}>GESTIÓN CAPACIDAD</h2>
 

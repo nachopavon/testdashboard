@@ -1,4 +1,4 @@
-.wrap{display:flex; flex-direction:column; gap:16px}
+.wrap{display:flex; flex-direction:column; gap:16px; max-width:1100px; margin:0 auto; padding:0 18px}
 .controlsTop{display:flex; justify-content:space-between; align-items:center}
 .yearTabs{display:flex; gap:8px}
 .tab{background:var(--card-bg); border:1px solid var(--ui-border); padding:6px 12px; border-radius:6px; color:var(--text)}

@@ -45,7 +45,7 @@ export default function Gcb03(): JSX.Element {
   const hideTooltip = () => setTooltip(null)
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} panelContainer`}>
       <h2>GESTIÓN DEL CAMBIO (GCB-03)</h2>
 
       <PanelFilters period={filters.period} area={filters.area} kind={filters.kind} responsible={filters.responsible} onChange={(next)=>setFilters(prev=>({ ...prev, ...next }))} />

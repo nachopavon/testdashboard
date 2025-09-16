@@ -34,7 +34,7 @@ export default function Gco05(): React.ReactElement {
   const hideTooltip = () => setTooltip(null)
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} panelContainer`}>
       <h2>GESTIÓN CONOCIMIENTO (GCO-05)</h2>
 
       <PanelFilters period={filters.period} area={filters.area} kind={filters.kind} responsible={filters.responsible} onChange={(next) => setFilters(prev => ({ ...prev, ...next }))} />

@@ -193,7 +193,7 @@ export default function Economic(){
   const fmt = (n:number)=> n.toLocaleString('es-ES') + ' €'
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} panelContainer`}>
       <div className={styles.controlsTop}>
         <div className={styles.yearTabs}>
           {years.map(y => <button key={y} aria-pressed={y===year} className={y===year?styles.tabActive:styles.tab} onClick={()=>setYear(y)}>{y}</button>)}

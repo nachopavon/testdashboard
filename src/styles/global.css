@@ -14,3 +14,6 @@ button{cursor:pointer}
 
 /* subtle default transitions */
 *{transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast)}
+
+/* Panel container utility: center content and restrict width */
+.panelContainer{ max-width:1100px; margin:0 auto; padding:0 18px }
