@@ -110,24 +110,6 @@ const cal: Indicator[] = [
   { id:'CAL-07', code:'CAL-07', title:'Accesibilidad WCAG 2.1', unit:'%', target:100, monthly: genRange(57, 98, 60, 100, 1) }
 ]
 
-// INN — (sin cambios explícitos)
-const inn: Indicator[] = [
-  { id:'INN-01', code:'INN-01', title:'Propuestas mejora implementadas', unit:'n/trimestre', target:3, monthly: genRange(61, 2, 0, 6, 0) },
-  { id:'INN-02', code:'INN-02', title:'Ahorro tiempo IA/automatización', unit:'%', target:30, monthly: genRange(62, 25, 0, 60, 1) },
-  { id:'INN-03', code:'INN-03', title:'Reutilización componentes', unit:'%', target:60, monthly: genRange(63, 55, 10, 100, 1) },
-  { id:'INN-04', code:'INN-04', title:'Adopción herramientas DevSecOps', unit:'%', target:100, monthly: genRange(64, 90, 40, 100, 1) },
-  { id:'INN-05', code:'INN-05', title:'Transferencia conocimiento', unit:'sesiones/mes', target:2, monthly: genRange(65, 1, 0, 6, 0) }
-]
-
-// VAL — (sin cambios explícitos)
-const val: Indicator[] = [
-  { id:'VAL-01', code:'VAL-01', title:'Reducción esfuerzo documentación IA', unit:'%', target:50, monthly: genRange(71, 40, 0, 100, 1) },
-  { id:'VAL-02', code:'VAL-02', title:'Precisión análisis predictivo', unit:'%', target:85, monthly: genRange(72, 80, 40, 100, 1) },
-  { id:'VAL-03', code:'VAL-03', title:'Integración herramientas corporativas', unit:'%', target:100, monthly: genRange(73, 95, 40, 100, 1) },
-  { id:'VAL-04', code:'VAL-04', title:'Cumplimiento sostenibilidad', unit:'%', target:90, monthly: genRange(74, 88, 40, 100, 1) },
-  { id:'VAL-05', code:'VAL-05', title:'Madurez procesos CI/CD', unit:'nivel', target:4, monthly: genRange(75, 3, 1, 5, 0) }
-]
-
 // HOR — Indicadores existentes (sin objetivo numérico en ANS; se mantienen)
 const hor: Indicator[] = [
   { id:'HOR-01', code:'HOR-01', title:'Tiempo de Evaluación', unit:'días', target:0, monthly: genRange(81, 5, 0, 30, 0) },
@@ -180,8 +162,6 @@ export type AnsData = {
   ges: Indicator[]
   seg: Indicator[]
   cal: Indicator[]
-  inn: Indicator[]
-  val: Indicator[]
   ons?: Indicator[]
   hor?: Indicator[]
   s2n?: Indicator[]
@@ -210,6 +190,6 @@ const ons: Indicator[] = [
   { id:'ONS_TEC-04', code:'ONS_TEC-04', title:'Auditorías de cumplimiento de estándares', unit:'n', target:0, monthly: genRange(94, 1, 0, 6, 0) }
 ]
 
-const ansData: AnsData = { months, niv, dis, ges, seg, cal, inn, val, ons, hor, s2n, gis, aut, ind }
+const ansData: AnsData = { months, niv, dis, ges, seg, cal, ons, hor, s2n, gis, aut, ind }
 
 export default ansData

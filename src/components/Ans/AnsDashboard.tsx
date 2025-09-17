@@ -3,7 +3,7 @@ import styles from './AnsDashboard.module.css'
 import ansData, { Indicator } from '../../data/ansData'
 import Card from '../Card'
 
-type Cat = 'niv'|'dis'|'ges'|'seg'|'cal'|'inn'|'val'|'ons'|'hor'|'s2n'|'gis'|'aut'|'ind'
+type Cat = 'niv'|'dis'|'ges'|'seg'|'cal'|'ons'|'hor'|'s2n'|'gis'|'aut'|'ind'
 
 type MetricItem = {
   id: string
@@ -136,8 +136,6 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
               { key: 'aut', label: 'AUT' },
               { key: 'ind', label: 'IND' },
               { key: 'cal', label: 'CAL' },
-              { key: 'inn', label: 'INN' },
-              { key: 'val', label: 'VAL' },
               { key: 'ons', label: 'ONS' }
             ]
             return order.map(o => (
