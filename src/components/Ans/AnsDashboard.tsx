@@ -72,7 +72,15 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
       ind: (ansData as any).ind || []
     } as const
     const items = categories[category]
-  return items.map((it: Indicator) => ({ id: it.id, code: it.code, title: it.title, value: it.monthly?.[monthLabel] ?? 0, target: it.target ?? 0, unit: it.unit })) as MetricItem[]
+  return items.map((it: Indicator) => {
+    let value = it.monthly?.[monthLabel] ?? 0
+    let target = it.target ?? 0
+    if(it.unit === '%'){
+      value = Math.min(100, value)
+      target = Math.min(100, target)
+    }
+    return { id: it.id, code: it.code, title: it.title, value, target, unit: it.unit }
+  }) as MetricItem[]
   }
 
   // Note: we no longer replace category cards with external sampleData metrics
@@ -103,6 +111,8 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
       const neededVal = Math.round(it.target * goal * 10)/10
       if(it.value < neededVal){ it.value = Math.min(Math.round(it.target * 1.02 * 10)/10, neededVal); promoted += 1 }
     }
+    // ensure percentage metrics never exceed 100%
+    out.forEach(o => { if(o.unit === '%') o.value = Math.min(100, o.value) })
     return out
   }
 
@@ -113,20 +123,27 @@ export default function AnsDashboard({filters}:{filters?: Filters}){
     <div className={`${styles.root} panelContainer`}>
       <div className={styles.controls}>
         <div className={styles.tabs} role="tablist" aria-label="Categorías ANS">
-          
-          <button className={`${styles.tab} ${cat === 'dis' ? styles.tabActive : ''}`} onClick={() => setCat('dis')} role="tab" aria-selected={cat === 'dis'}>DIS</button>
-          <button className={`${styles.tab} ${cat === 'niv' ? styles.tabActive : ''}`} onClick={() => setCat('niv')} role="tab" aria-selected={cat === 'niv'}>NIV</button>
-          <button className={`${styles.tab} ${cat === 'ges' ? styles.tabActive : ''}`} onClick={() => setCat('ges')} role="tab" aria-selected={cat === 'ges'}>GES</button>
-          <button className={`${styles.tab} ${cat === 'hor' ? styles.tabActive : ''}`} onClick={() => setCat('hor')} role="tab" aria-selected={cat === 'hor'}>HOR</button>
-          <button className={`${styles.tab} ${cat === 's2n' ? styles.tabActive : ''}`} onClick={() => setCat('s2n')} role="tab" aria-selected={cat === 's2n'}>S2N</button>
-          <button className={`${styles.tab} ${cat === 'seg' ? styles.tabActive : ''}`} onClick={() => setCat('seg')} role="tab" aria-selected={cat === 'seg'}>SEG</button>
-          <button className={`${styles.tab} ${cat === 'gis' ? styles.tabActive : ''}`} onClick={() => setCat('gis')} role="tab" aria-selected={cat === 'gis'}>GIS</button>
-          <button className={`${styles.tab} ${cat === 'aut' ? styles.tabActive : ''}`} onClick={() => setCat('aut')} role="tab" aria-selected={cat === 'aut'}>AUT</button>
-          <button className={`${styles.tab} ${cat === 'ind' ? styles.tabActive : ''}`} onClick={() => setCat('ind')} role="tab" aria-selected={cat === 'ind'}>IND</button>
-          <button className={`${styles.tab} ${cat === 'cal' ? styles.tabActive : ''}`} onClick={() => setCat('cal')} role="tab" aria-selected={cat === 'cal'}>CAL</button>
-          <button className={`${styles.tab} ${cat === 'inn' ? styles.tabActive : ''}`} onClick={() => setCat('inn')} role="tab" aria-selected={cat === 'inn'}>INN</button>
-          <button className={`${styles.tab} ${cat === 'val' ? styles.tabActive : ''}`} onClick={() => setCat('val')} role="tab" aria-selected={cat === 'val'}>VAL</button>
-          <button className={`${styles.tab} ${cat === 'ons' ? styles.tabActive : ''}`} onClick={() => setCat('ons')} role="tab" aria-selected={cat === 'ons'}>ONS</button>
+          {(() => {
+            // ensure NIV is first, keep rest order as before
+            const order: { key: Cat; label: string }[] = [
+              { key: 'niv', label: 'NIV' },
+              { key: 'dis', label: 'DIS' },
+              { key: 'ges', label: 'GES' },
+              { key: 'hor', label: 'HOR' },
+              { key: 's2n', label: 'S2N' },
+              { key: 'seg', label: 'SEG' },
+              { key: 'gis', label: 'GIS' },
+              { key: 'aut', label: 'AUT' },
+              { key: 'ind', label: 'IND' },
+              { key: 'cal', label: 'CAL' },
+              { key: 'inn', label: 'INN' },
+              { key: 'val', label: 'VAL' },
+              { key: 'ons', label: 'ONS' }
+            ]
+            return order.map(o => (
+              <button key={o.key} className={`${styles.tab} ${cat === o.key ? styles.tabActive : ''}`} onClick={() => setCat(o.key)} role="tab" aria-selected={cat === o.key}>{o.label}</button>
+            ))
+          })()}
         </div>
       </div>
 

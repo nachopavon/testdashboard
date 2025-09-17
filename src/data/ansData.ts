@@ -30,31 +30,53 @@ function genRange(seed:number, base:number, min:number, max:number, digits = 1):
 
 // Build indicators according to requested specification
 
+// const niv: Indicator[] = [
+  // { id:'NIV-01', code:'NIV-01', title:'Incumplimiento de plazos de respuesta en servicios de prestación continua', unit:'n', target:0, monthly: genRange(11, 3, 0, 20, 0) },
+  // { id:'NIV-02', code:'NIV-02', title:'Grado de cumplimiento de la planificación en servicios planificados', unit:'%', target:100, monthly: genRange(12, 92, 50, 100, 1) },
+  // { id:'NIV-03', code:'NIV-03', title:'Grado de cumplimiento de tiempos de resolución a peticiones de servicios de soporte y consulta', unit:'%', target:95, monthly: genRange(13, 90, 50, 100, 1) },
+  // { id:'NIV-04', code:'NIV-04', title:'Grado de cumplimiento de plazos por proyecto', unit:'%', target:95, monthly: genRange(14, 88, 40, 100, 1) },
+  // { id:'NIV-05', code:'NIV-05', title:'Porcentaje de falsos defectos detectados en un servicio', unit:'%', target:0, monthly: genRange(15, 4, 0, 30, 1) },
+  // { id:'NIV-06', code:'NIV-06', title:'Número de defectos graves no detectados', unit:'n', target:0, monthly: genRange(16, 1, 0, 10, 0) },
+  // { id:'NIV-07', code:'NIV-07', title:'Número de defectos leves no detectados', unit:'n', target:0, monthly: genRange(17, 5, 0, 30, 0) },
+  // { id:'NIV-08', code:'NIV-08', title:'Grado de implantaciones fallidas con marcha atrás', unit:'%', target:0, monthly: genRange(18, 1.2, 0, 10, 1) },
+  // { id:'NIV-09', code:'NIV-09', title:'Indicador de rotación del equipo (trimestral)', unit:'%', target:0, monthly: genRange(19, 2.5, 0, 10, 1) }
+// NIV — Indicadores de servicio (objetivos = valor ofertado en ANS)
 const niv: Indicator[] = [
-  { id:'NIV-01', code:'NIV-01', title:'Incumplimiento de plazos de respuesta en servicios de prestación continua', unit:'n', target:0, monthly: genRange(11, 3, 0, 20, 0) },
-  { id:'NIV-02', code:'NIV-02', title:'Grado de cumplimiento de la planificación en servicios planificados', unit:'%', target:100, monthly: genRange(12, 92, 50, 100, 1) },
-  { id:'NIV-03', code:'NIV-03', title:'Grado de cumplimiento de tiempos de resolución a peticiones de servicios de soporte y consulta', unit:'%', target:95, monthly: genRange(13, 90, 50, 100, 1) },
-  { id:'NIV-04', code:'NIV-04', title:'Grado de cumplimiento de plazos por proyecto', unit:'%', target:95, monthly: genRange(14, 88, 40, 100, 1) },
-  { id:'NIV-05', code:'NIV-05', title:'Porcentaje de falsos defectos detectados en un servicio', unit:'%', target:0, monthly: genRange(15, 4, 0, 30, 1) },
-  { id:'NIV-06', code:'NIV-06', title:'Número de defectos graves no detectados', unit:'n', target:0, monthly: genRange(16, 1, 0, 10, 0) },
-  { id:'NIV-07', code:'NIV-07', title:'Número de defectos leves no detectados', unit:'n', target:0, monthly: genRange(17, 5, 0, 30, 0) },
-  { id:'NIV-08', code:'NIV-08', title:'Grado de implantaciones fallidas con marcha atrás', unit:'%', target:0, monthly: genRange(18, 1.2, 0, 10, 1) },
-  { id:'NIV-09', code:'NIV-09', title:'Indicador de rotación del equipo (trimestral)', unit:'%', target:0, monthly: genRange(19, 2.5, 0, 10, 1) }
+  // Incumplimiento plazos respuesta (≤ 3%) -> % 
+  { id:'NIV-01', code:'NIV-01', title:'Incumplimiento de plazos de respuesta en servicios de prestación continua', unit:'%', target:3, monthly: genRange(11, 2.2, 0, 6, 1) },
+  // Cumplimiento planificación (≥ 97%) -> %
+  { id:'NIV-02', code:'NIV-02', title:'Grado de cumplimiento de la planificación en servicios planificados', unit:'%', target:97, monthly: genRange(12, 98, 90, 100, 1) },
+  // Cumplimiento tiempos resolución soporte (≥ 97%) -> %
+  { id:'NIV-03', code:'NIV-03', title:'Grado de cumplimiento de tiempos de resolución a peticiones de servicios de soporte y consulta', unit:'%', target:97, monthly: genRange(13, 98, 90, 100, 1) },
+  // Cumplimiento plazos por proyecto (≥ 97%) -> %
+  { id:'NIV-04', code:'NIV-04', title:'Grado de cumplimiento de plazos por proyecto', unit:'%', target:97, monthly: genRange(14, 98, 85, 100, 1) },
+  // Falsos defectos (≤ 3%) -> %
+  { id:'NIV-05', code:'NIV-05', title:'Porcentaje de falsos defectos detectados en un servicio', unit:'%', target:3, monthly: genRange(15, 2.2, 0, 8, 1) },
+  // Defectos graves no detectados (≤ 1) -> n
+  { id:'NIV-06', code:'NIV-06', title:'Número de defectos graves no detectados', unit:'n', target:1, monthly: genRange(16, 0.7, 0, 3, 0) },
+  // Defectos leves no detectados (≤ 2) -> n
+  { id:'NIV-07', code:'NIV-07', title:'Número de defectos leves no detectados', unit:'n', target:2, monthly: genRange(17, 1.4, 0, 6, 0) },
+  // Implantaciones fallidas con rollback (≤ 3%) -> %
+  { id:'NIV-08', code:'NIV-08', title:'Grado de implantaciones fallidas con marcha atrás', unit:'%', target:3, monthly: genRange(18, 2.0, 0, 7, 1) },
+  // Rotación del equipo (trimestral) (≤ 8%) -> %
+  { id:'NIV-09', code:'NIV-09', title:'Indicador de rotación del equipo (trimestral)', unit:'%', target:8, monthly: genRange(19, 6.0, 0, 12, 1) }
 ]
 
+// DIS — Disponibilidad del servicio (objetivos = valor ofertado en ANS)
 const dis: Indicator[] = [
-  { id:'DIS_01', code:'DIS_01', title:'Plazo de inicio', unit:'días', target:0, monthly: genRange(21, 7, 0, 30, 0) },
-  { id:'DIS_02', code:'DIS_02', title:'Plazo de adquisición', unit:'días', target:0, monthly: genRange(22, 15, 0, 60, 0) },
-  { id:'DIS_03', code:'DIS_03', title:'Preaviso de baja en el equipo de trabajo', unit:'días', target:0, monthly: genRange(23, 30, 0, 120, 0) },
-  { id:'DIS_04', code:'DIS_04', title:'Plazo de sustitución a petición del adjudicatario', unit:'días', target:0, monthly: genRange(24, 5, 0, 30, 0) },
-  { id:'DIS_05', code:'DIS_05', title:'Plazo de sustitución a petición de la dirección técnica', unit:'días', target:0, monthly: genRange(25, 3, 0, 20, 0) },
-  { id:'DIS_06', code:'DIS_06', title:'Número de sustituciones', unit:'n', target:0, monthly: genRange(26, 2, 0, 20, 0) },
-  { id:'DIS_07', code:'DIS_07', title:'Plazo de incorporación de técnicos adicionales', unit:'días', target:0, monthly: genRange(27, 14, 0, 60, 0) },
-  { id:'DIS_08', code:'DIS_08', title:'Plazo de salida de técnicos', unit:'días', target:0, monthly: genRange(28, 7, 0, 60, 0) },
-  { id:'DIS_09', code:'DIS_09', title:'Indisponibilidad del servicio', unit:'h', target:0, monthly: genRange(29, 2, 0, 48, 0) }
+  { id:'DIS_01', code:'DIS_01', title:'Plazo de inicio', unit:'días', target:15, monthly: genRange(21, 12, 5, 30, 0) },
+  { id:'DIS_02', code:'DIS_02', title:'Plazo de adquisición', unit:'días', target:14, monthly: genRange(22, 12, 7, 30, 0) },
+  { id:'DIS_03', code:'DIS_03', title:'Preaviso de baja en el equipo de trabajo', unit:'días', target:5, monthly: genRange(23, 4, 1, 14, 0) },
+  { id:'DIS_04', code:'DIS_04', title:'Plazo de sustitución a petición del adjudicatario', unit:'días', target:10, monthly: genRange(24, 8, 3, 21, 0) },
+  { id:'DIS_05', code:'DIS_05', title:'Plazo de sustitución a petición de la dirección técnica', unit:'días', target:14, monthly: genRange(25, 11, 4, 21, 0) },
+  { id:'DIS_06', code:'DIS_06', title:'Número de sustituciones', unit:'n', target:4, monthly: genRange(26, 3, 0, 8, 0) },
+  { id:'DIS_07', code:'DIS_07', title:'Plazo de incorporación de técnicos adicionales', unit:'días', target:14, monthly: genRange(27, 12, 5, 30, 0) },
+  { id:'DIS_08', code:'DIS_08', title:'Plazo de salida de técnicos', unit:'días', target:10, monthly: genRange(28, 8, 3, 20, 0) },
+  // En el pliego se mide como “% de horas de trabajo indisponibles” (≤10%)
+  { id:'DIS_09', code:'DIS_09', title:'Indisponibilidad del servicio', unit:'%', target:10, monthly: genRange(29, 6.5, 0, 20, 1) }
 ]
 
-// Keep GES as-is (Gestión existía previamente)
+// GES — (sin cambios explícitos en ANS; mantenemos tus valores)
 const ges: Indicator[] = [
   { id:'GES-01', code:'GES-01', title:'Tiempo análisis impacto (AIM)', unit:'h', target:24, monthly: genRange(31, 18, 2, 72, 0) },
   { id:'GES-02', code:'GES-02', title:'Precisión estimaciones', unit:'%', target:10, monthly: genRange(32, 9, 2, 20, 1) },
@@ -66,15 +88,18 @@ const ges: Indicator[] = [
   { id:'GES-08', code:'GES-08', title:'Eficiencia gestión demanda', unit:'%', target:85, monthly: genRange(38, 84, 50, 100, 1) }
 ]
 
+// SEG — Gestión de seguridad (porcentuales según ANS)
 const seg: Indicator[] = [
-  { id:'SEG-01', code:'SEG-01', title:'Número de vulnerabilidades críticas de seguridad detectadas previas al entorno de producción', unit:'n', target:0, monthly: genRange(41, 0.5, 0, 5, 0) },
-  { id:'SEG-02', code:'SEG-02', title:'Número de vulnerabilidades no críticas de seguridad detectadas previas al entorno de producción', unit:'n', target:0, monthly: genRange(42, 2, 0, 15, 0) },
-  { id:'SEG-03', code:'SEG-03', title:'Tiempo de resolución de incidentes relacionados con la seguridad en producción', unit:'h', target:24, monthly: genRange(43, 12, 1, 72, 0) },
-  { id:'SEG-04', code:'SEG-04', title:'Número de no conformidades detectadas en auditorías del ENS', unit:'n', target:0, monthly: genRange(44, 0.2, 0, 5, 0) },
-  { id:'SEG-05', code:'SEG-05', title:'Tiempo de planificación de no conformidades resueltas en auditorías del ENS', unit:'días', target:0, monthly: genRange(45, 30, 0, 180, 0) }
+  { id:'SEG-01', code:'SEG-01', title:'% de vulnerabilidades críticas detectadas antes de producción', unit:'%', target:99, monthly: genRange(41, 99.4, 90, 100, 1) },
+  { id:'SEG-02', code:'SEG-02', title:'% de vulnerabilidades no críticas detectadas antes de producción', unit:'%', target:95, monthly: genRange(42, 96.0, 85, 100, 1) },
+  // “98% ≤ 8h”: medimos el % de incidentes resueltos en ≤ 8h
+  { id:'SEG-03', code:'SEG-03', title:'% incidentes de seguridad resueltos en ≤ 8h (producción)', unit:'%', target:98, monthly: genRange(43, 98.5, 85, 100, 1) },
+  { id:'SEG-04', code:'SEG-04', title:'% de no conformidades detectadas en auditorías ENS', unit:'%', target:5, monthly: genRange(44, 3.0, 0, 10, 1) },
+  // “90% ≤ 3h”: % de no conformidades planificadas en ≤ 3h
+  { id:'SEG-05', code:'SEG-05', title:'% de no conformidades ENS planificadas en ≤ 3h', unit:'%', target:90, monthly: genRange(45, 92.0, 70, 100, 1) }
 ]
 
-// Keep CAL/INN/VAL as before
+// CAL — (sin cambios, fuera del bloque ANS aportado)
 const cal: Indicator[] = [
   { id:'CAL-01', code:'CAL-01', title:'Cobertura pruebas unitarias', unit:'%', target:70, monthly: genRange(51, 68, 30, 100, 1) },
   { id:'CAL-02', code:'CAL-02', title:'Defectos producción', unit:'n/release', target:3, monthly: genRange(52, 2, 0, 8, 0) },
@@ -85,6 +110,7 @@ const cal: Indicator[] = [
   { id:'CAL-07', code:'CAL-07', title:'Accesibilidad WCAG 2.1', unit:'%', target:100, monthly: genRange(57, 98, 60, 100, 1) }
 ]
 
+// INN — (sin cambios explícitos)
 const inn: Indicator[] = [
   { id:'INN-01', code:'INN-01', title:'Propuestas mejora implementadas', unit:'n/trimestre', target:3, monthly: genRange(61, 2, 0, 6, 0) },
   { id:'INN-02', code:'INN-02', title:'Ahorro tiempo IA/automatización', unit:'%', target:30, monthly: genRange(62, 25, 0, 60, 1) },
@@ -93,6 +119,7 @@ const inn: Indicator[] = [
   { id:'INN-05', code:'INN-05', title:'Transferencia conocimiento', unit:'sesiones/mes', target:2, monthly: genRange(65, 1, 0, 6, 0) }
 ]
 
+// VAL — (sin cambios explícitos)
 const val: Indicator[] = [
   { id:'VAL-01', code:'VAL-01', title:'Reducción esfuerzo documentación IA', unit:'%', target:50, monthly: genRange(71, 40, 0, 100, 1) },
   { id:'VAL-02', code:'VAL-02', title:'Precisión análisis predictivo', unit:'%', target:85, monthly: genRange(72, 80, 40, 100, 1) },
@@ -101,7 +128,7 @@ const val: Indicator[] = [
   { id:'VAL-05', code:'VAL-05', title:'Madurez procesos CI/CD', unit:'nivel', target:4, monthly: genRange(75, 3, 1, 5, 0) }
 ]
 
-// New categories per user request
+// HOR — Indicadores existentes (sin objetivo numérico en ANS; se mantienen)
 const hor: Indicator[] = [
   { id:'HOR-01', code:'HOR-01', title:'Tiempo de Evaluación', unit:'días', target:0, monthly: genRange(81, 5, 0, 30, 0) },
   { id:'HOR-02', code:'HOR-02', title:'Tiempo de Planificación', unit:'días', target:0, monthly: genRange(82, 10, 0, 60, 0) },
@@ -111,6 +138,7 @@ const hor: Indicator[] = [
   { id:'HOR-06', code:'HOR-06', title:'Número de subsanaciones de errores sobre los resultados de la petición de servicio', unit:'n', target:0, monthly: genRange(86, 1, 0, 10, 0) }
 ]
 
+// S2N — Indicadores existentes (sin objetivo numérico en ANS; se mantienen)
 const s2n: Indicator[] = [
   { id:'S2N-01', code:'S2N-01', title:'Soporte 2N Nuevos por Periodo', unit:'n', target:0, monthly: genRange(91, 20, 0, 200, 0) },
   { id:'S2N-02', code:'S2N-02', title:'Soporte 2N Resueltos por Periodo', unit:'n', target:0, monthly: genRange(92, 18, 0, 200, 0) },
@@ -120,27 +148,31 @@ const s2n: Indicator[] = [
   { id:'S2N-06', code:'S2N-06', title:'Soporte 2N Rezagados por Equipo asignado', unit:'n', target:0, monthly: genRange(96, 2, 0, 40, 0) }
 ]
 
+// GIS — Datos espaciales (porcentuales según ANS)
 const gis: Indicator[] = [
-  { id:'GIS-01', code:'GIS-01', title:'Porcentaje de datos necesarios que están presentes en la base de datos SIGC', unit:'%', target:100, monthly: genRange(101, 88, 40, 100, 1) },
-  { id:'GIS-02', code:'GIS-02', title:'Nivel de calidad de los datos geoespaciales', unit:'%', target:100, monthly: genRange(102, 85, 40, 100, 1) },
-  { id:'GIS-03', code:'GIS-03', title:'Existencia de metadatos para los conjuntos de datos espaciales', unit:'%', target:100, monthly: genRange(103, 90, 40, 100, 1) },
-  { id:'GIS-04', code:'GIS-04', title:'Grado de conformidad de los metadatos para los conjuntos y los servicios de datos geoespaciales', unit:'%', target:100, monthly: genRange(104, 88, 40, 100, 1) },
-  { id:'GIS-05', code:'GIS-05', title:'Porcentaje de datos actualizados', unit:'%', target:100, monthly: genRange(105, 75, 20, 100, 1) }
+  { id:'GIS-01', code:'GIS-01', title:'Porcentaje de datos necesarios presentes en SIGC', unit:'%', target:95, monthly: genRange(101, 97, 80, 100, 1) },
+  { id:'GIS-02', code:'GIS-02', title:'Nivel de calidad de los datos geoespaciales', unit:'%', target:95, monthly: genRange(102, 96, 80, 100, 1) },
+  { id:'GIS-03', code:'GIS-03', title:'Existencia de metadatos para los conjuntos de datos espaciales', unit:'%', target:100, monthly: genRange(103, 100, 90, 100, 1) },
+  { id:'GIS-04', code:'GIS-04', title:'Grado de conformidad de metadatos de conjuntos y servicios geoespaciales', unit:'%', target:95, monthly: genRange(104, 96, 80, 100, 1) },
+  { id:'GIS-05', code:'GIS-05', title:'Porcentaje de datos actualizados', unit:'%', target:95, monthly: genRange(105, 96, 70, 100, 1) }
 ]
 
+// AUT — Automatización (porcentuales según ANS)
 const aut: Indicator[] = [
-  { id:'AUT-01', code:'AUT-01', title:'Tasa de automatización de pruebas', unit:'%', target:0, monthly: genRange(111, 40, 0, 100, 1) },
-  { id:'AUT-02', code:'AUT-02', title:'Tasa de éxito de la automatización', unit:'%', target:0, monthly: genRange(112, 85, 0, 100, 1) },
-  { id:'AUT-03', code:'AUT-03', title:'Tasa de automatización de documentación', unit:'%', target:0, monthly: genRange(113, 30, 0, 100, 1) },
-  { id:'AUT-04', code:'AUT-04', title:'Eficiencia de robots', unit:'%', target:0, monthly: genRange(114, 60, 0, 100, 1) },
-  { id:'AUT-05', code:'AUT-05', title:'Reducción de errores por Automatización', unit:'%', target:0, monthly: genRange(115, 25, 0, 100, 1) }
+  { id:'AUT-01', code:'AUT-01', title:'Tasa de automatización de pruebas', unit:'%', target:95, monthly: genRange(111, 96, 80, 100, 1) },
+  { id:'AUT-02', code:'AUT-02', title:'Tasa de éxito de la automatización', unit:'%', target:95, monthly: genRange(112, 96, 70, 100, 1) },
+  { id:'AUT-03', code:'AUT-03', title:'Tasa de automatización de documentación', unit:'%', target:95, monthly: genRange(113, 96, 60, 100, 1) },
+  { id:'AUT-04', code:'AUT-04', title:'Eficiencia de robots', unit:'%', target:60, monthly: genRange(114, 72, 40, 100, 1) },
+  { id:'AUT-05', code:'AUT-05', title:'Reducción de errores por Automatización', unit:'%', target:95, monthly: genRange(115, 96, 70, 100, 1) }
 ]
 
+// IND — Industrialización (según ANS)
 const ind: Indicator[] = [
-  { id:'IND-01', code:'IND-01', title:'Tasa de adopción de herramientas de DevOps', unit:'%', target:0, monthly: genRange(121, 50, 0, 100, 1) },
-  { id:'IND-02', code:'IND-02', title:'Frecuencia de despliegues', unit:'n/mes', target:0, monthly: genRange(122, 8, 0, 30, 0) }
+  { id:'IND-01', code:'IND-01', title:'Tasa de adopción de herramientas de DevOps', unit:'%', target:95, monthly: genRange(121, 96, 70, 100, 1) },
+  { id:'IND-02', code:'IND-02', title:'Frecuencia de despliegues', unit:'n/mes', target:1, monthly: genRange(122, 6, 1, 24, 0) }
 ]
 
+// --- Exported data structure ---
 export type AnsData = {
   months: string[]
   niv: Indicator[]
