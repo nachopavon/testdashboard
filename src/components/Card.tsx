@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import Gauge from './Gauge'
 import styles from './Card.module.css'
+import { trackEvent } from '../lib/analytics'
 
 type Item = {
   id: string
@@ -23,10 +24,11 @@ export default function Card({item, index}:{item:Item, index?:number}){
     const parentRect = (el.parentElement || document.body).getBoundingClientRect()
     setTooltipPos({x: Math.round(rect.left - parentRect.left + rect.width/2), y: Math.round(rect.top - parentRect.top - 8)})
     setTooltipVisible(true)
+    try{ trackEvent('card_tooltip_show', { id: item.id, code: item.code, title: item.title }) }catch(e){}
   }
 
   return (
-    <div className={styles.card} style={index!=null?{animationDelay:`${index*40}ms`}:{}}>
+  <div className={styles.card} style={index!=null?{animationDelay:`${index*40}ms`}:{}} onClick={()=>{ try{ trackEvent('card_click', { id: item.id, code: item.code, title: item.title }) }catch(e){} }}>
       <div className={styles.headerRow}>
         <div className={styles.title}>{item.code}</div>
         <div className={styles.subtitle}>{item.title}</div>
