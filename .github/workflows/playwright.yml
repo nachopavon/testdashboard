@@ -1,0 +1,68 @@
+name: Playwright E2E
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npm run test:e2e -- --reporter=list
+
+      - name: Upload Playwright report (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+
+      - name: Upload Playwright report (Pages artifact)
+        if: always()
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: playwright-report
+
+  deploy-pages:
+    needs: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Playwright report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+
+      - name: Ensure deploy folder
+        run: |
+          mkdir -p ./playwright-report
+          # downloaded artifact is placed in ./playwright-report by default when single artifact
+          # but ensure files are in place (move if necessary)
+          if [ -d "./playwright-report/0" ]; then mv ./playwright-report/0/* ./playwright-report/ || true; fi
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
+        # action will deploy the contents of the workspace (playwright-report copied above)
+      - name: Post-deploy - output URL
+        run: echo "Playwright report deployed to GitHub Pages (check Pages settings for the URL)"
+

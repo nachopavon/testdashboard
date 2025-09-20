@@ -3,12 +3,49 @@
 Dashboard de ejemplo construido con React + TypeScript y Vite. Sirve como plantilla para visualizar indicadores operativos y de servicio (ANS, ONS, económico, etc.).
 
 ## Estructura del repositorio
-- `src/` – código de la aplicación (componentes React, estilos CSS Modules, datos de ejemplo).
-- `src/components/` – componentes UI (Sidebar, Card, Gauge, AnsDashboard, etc.).
-- `src/data/` – módulos con datos sintéticos o reales (por ejemplo `ansData.ts`).
-- `public/` – activos públicos y `CNAME` para GitHub Pages.
-- `.github/workflows/` – workflow para build y deploy a GitHub Pages.
 
+## Tests E2E con Playwright
+
+Se incluye una suite E2E con Playwright para verificar la navegación y componentes principales.
+
+Comandos útiles:
+
+- Instalar dependencias (si no está hecho):
+
+```bash
+npm install
+```
+
+- Instalar navegadores Playwright (necesario la primera vez):
+
+```bash
+npx playwright install
+```
+
+- Ejecutar tests E2E (headless):
+
+```bash
+npx playwright test
+# o
+npm run test:e2e
+```
+
+- Ejecutar tests en modo visible (útil para depurar):
+
+```bash
+npm run test:e2e:headed
+```
+
+- Ver reporte HTML (generado en `playwright-report`):
+
+```bash
+# después de ejecutar los tests
+open playwright-report/index.html
+```
+
+Consejos:
+- Para selectores estables, preferir usar roles o `data-testid` en componentes si se van a añadir más tests.
+- En CI, ejecutar `npx playwright install --with-deps` para asegurar dependencias del sistema.
 ## Demo local (rápido)
 
 1. Instala dependencias:
